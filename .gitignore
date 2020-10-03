@@ -1,0 +1,16 @@
+# Ignorar diretorios
+**/Debug
+**/.vscode
+
+# Ignorar arquivos de projeto
+*.mk
+*.exe
+*.o
+*.su
+*.d
+*.elf
+*.bin
+*.list
+*.map
+*.launch
+*.ld
