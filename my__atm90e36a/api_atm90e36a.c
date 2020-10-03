@@ -14,14 +14,18 @@
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
-static void walk1_machine(bool method, atm_states_en next_state);
-static void walk2_machine(atm_result_code_en method, atm_states_en next_state);
+static bool ATM_config_reg_MMode0(void);
+static bool ATM_config_reg_MMode1(void);
+static bool ATM_config_reg_CS(uint16_t reg);
+
+static bool walk1_machine(bool method, atm_states_en next_state);
+static bool walk2_machine(atm_result_code_en method, atm_states_en next_state);
 static bool walk3_machine(uint16_t addr, uint16_t value, atm_states_en next_state);
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
 ATM90_app_st ATM = {0};
-QueueHandle_t *Queue_ATM_HANDLE = NULL;
+static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 
 /***************************************************************************************************
 * Vars
@@ -70,6 +74,7 @@ void ATM_api_check_retry(void)
 {
   if (ATM.Retry >= MAX_RETRIES)
   {
+    ATM.State.Current = AtmState_Suspended;
     ATM.Mode = SuspendedMode;
     ATM.Retry = 0;
   }  
@@ -85,6 +90,8 @@ void ATM_api_check_hw_pins(void)
   if(ATM.Drv.monitor_warn())
   {
     flag = true;
+    uint16_t data = 0;
+    ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data);
     // Send event to UART to print error msg
     ATM_send_event_to_uart(Cmd_PrintThis, 1, NULL, 0);
   }
@@ -164,9 +171,11 @@ void ATM_api_check_queue(void)
 ***************************************************************************************************/
 void ATM_api_periodic_checks(void)
 {
-  ATM_api_check_hw_pins();
-
-  ATM_api_check_retry();
+  if(ATM.Mode != SuspendedMode)
+  {
+    ATM_api_check_hw_pins();
+    ATM_api_check_retry();
+  }
 
   ATM_api_check_queue();
 }
@@ -178,16 +187,16 @@ static bool ATM_config_reg_MMode0(void)
 {
   uint16_t LocalReadVal = 0;
   
-  uint16_t data =  (~ATM_REG_MMode0_Msk_I1I3Swap | ATM_REG_MMode0_Msk_Freq60Hz | ~ATM_REG_MMode0_Msk_HPFOff |
-                    ATM_REG_MMode0_Msk_didtEn    | ATM_REG_MMode0_Msk_001LSB   | ~ATM_REG_MMode0_Msk_3P3W |
-                    ATM_REG_MMode0_Msk_CF2varh   | ~ ATM_REG_MMode0_Msk_CF2ESV | ATM_REG_MMode0_Msk_ABSEnQ | 
-                    ATM_REG_MMode0_Msk_ABSEnP    | ATM_REG_MMode0_Msk_EnPA     | ATM_REG_MMode0_Msk_EnPB | 
-                    ATM_REG_MMode0_Msk_EnPC);
+  uint16_t data =  0;
+
+	data |= ((ATM_REG_MMode0_Msk_Freq60Hz |  ATM_REG_MMode0_Msk_didtEn | ATM_REG_MMode0_Msk_001LSB |
+            ATM_REG_MMode0_Msk_CF2varh  | ATM_REG_MMode0_Msk_ABSEnQ  | ATM_REG_MMode0_Msk_ABSEnP |
+			      ATM_REG_MMode0_Msk_EnPA     | ATM_REG_MMode0_Msk_EnPB    | ATM_REG_MMode0_Msk_EnPC));
   
 
-  if(ATM.Drv.write_reg(ATM_REG_MMode0_Add, data))
+  if(ATM.Drv.write_reg(ATM_REG_MMode0_Add, data) == ATM_RC_OK)
   {
-    if(ATM.Drv.read_reg(ATM_REG_MMode0_Add, &LocalReadVal))
+    if(ATM.Drv.read_reg(ATM_REG_MMode0_Add, &LocalReadVal) == ATM_RC_OK)
     {
       if(LocalReadVal == data)
       {
@@ -217,9 +226,9 @@ static bool ATM_config_reg_MMode1(void)
                     (ATM_REG_MMode1_Pos_PGA_GAIN_I1 << ATM_REG_MMode1_Val_1x));
   
 
-  if(ATM.Drv.write_reg(ATM_REG_MMode1_Add, data))
+  if(ATM.Drv.write_reg(ATM_REG_MMode1_Add, data) == ATM_RC_OK)
   {
-    if(ATM.Drv.read_reg(ATM_REG_MMode1_Add, &LocalReadVal))
+    if(ATM.Drv.read_reg(ATM_REG_MMode1_Add, &LocalReadVal) == ATM_RC_OK)
     {
       if(LocalReadVal == data)
       {
@@ -231,7 +240,24 @@ static bool ATM_config_reg_MMode1(void)
   return false;
 }
 
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool ATM_config_reg_CS(uint16_t reg)
+{
+  uint16_t LocalReadVal = 0;
 
+  if(ATM.Drv.read_reg(reg, &LocalReadVal) == ATM_RC_OK)
+  {
+    if(ATM.Drv.write_reg(reg, LocalReadVal) == ATM_RC_OK)
+    {
+      return true;  
+    }
+  }
+
+  ATM.Retry++;
+  return false;  
+}
 
 
 
@@ -246,7 +272,7 @@ static bool ATM_config_reg_MMode1(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static void walk1_machine(bool method, atm_states_en next_state)
+static bool walk1_machine(bool method, atm_states_en next_state)
 {
   if(method)
   {
@@ -254,17 +280,19 @@ static void walk1_machine(bool method, atm_states_en next_state)
     {
       ATM_api_change_state(next_state);
     }
+    return true;
   }
   else
   {
     ATM.Retry++;
+    return false;
   }
 }
 
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static void walk2_machine(atm_result_code_en method, atm_states_en next_state)
+static bool walk2_machine(atm_result_code_en method, atm_states_en next_state)
 {
   if(method == ATM_RC_OK)
   {
@@ -272,10 +300,12 @@ static void walk2_machine(atm_result_code_en method, atm_states_en next_state)
     {
       ATM_api_change_state(next_state);
     }
+    return true;
   }
   else
   {
     ATM.Retry++;
+    return false;
   }
 }
 
@@ -286,9 +316,9 @@ static bool walk3_machine(uint16_t addr, uint16_t value, atm_states_en next_stat
 {
   uint16_t LocalReadVal = 0;
 
-  if(ATM.Drv.write_reg(addr, value))
+  if(ATM.Drv.write_reg(addr, value) == ATM_RC_OK)
   {
-    if(ATM.Drv.read_reg(addr, &LocalReadVal))
+    if(ATM.Drv.read_reg(addr, &LocalReadVal) == ATM_RC_OK)
     {
       if(LocalReadVal == value)
       {
@@ -335,7 +365,7 @@ void ATM_machine_config_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(ATM_send_event_to_leds(Cmd_BlinkPattern1, 200), AtmState_SoftReset);
+      ATM_api_change_state(AtmState_SoftReset);
     break;    
     //----------------------------------------------
     case AtmState_SoftReset:
@@ -393,10 +423,10 @@ void ATM_machine_config_mode(void)
       // Default
 
       // 4.4) MMode0
-      zAssert(ATM_config_reg_MMode0());
+      zAssert(walk1_machine(ATM_config_reg_MMode0(), 0));
 
       // 4.5) MMode1
-      zAssert(ATM_config_reg_MMode1());
+      zAssert(walk1_machine(ATM_config_reg_MMode1(), 0));
 
       // 4.6) P Start Th
       zAssert(walk3_machine(ATM_REG_PStartTh_Add, 0x0bb8, 0));
@@ -416,7 +446,10 @@ void ATM_machine_config_mode(void)
       // 4.11) S Start Phase  Th
       zAssert(walk3_machine(ATM_REG_SPhaseTh_Add, 0x00c8, 0));
 
-      // 4.12) Set ConfigStart to final value
+      // 4.12) Configura CS0 register
+      zAssert(walk1_machine(ATM_config_reg_CS(ATM_REG_CS0_Add), 0));
+
+      // 4.13) Set ConfigStart to final value
       zAssert(walk3_machine(ATM_REG_ConfigStart_Add, CS_REG_Value_Operation, AtmState_Suspended));
 
       ATM.Mode = SuspendedMode;

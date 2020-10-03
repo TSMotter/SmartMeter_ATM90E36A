@@ -24,7 +24,7 @@ CHANNELALIAS
 
 SEND
 0
-ATM initial mode
+ATM config mode
 24 30 31 2C 30 31 2C 30 30 30 30 2C 2C 38 31 61 66 2A
 0
 5

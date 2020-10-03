@@ -46,12 +46,17 @@ static uint8_t            byRingBuffer[RB_Size] = {0};
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-void UART_api_init(void)
+bool UART_api_init(void)
 {
   // Initialize UART queue
   Queue_UART_HANDLE = RTOS_Get_Queue_Idx(QueueIDX_UART);
   *Queue_UART_HANDLE = xQueueCreate(32, SIZE_OF_QUEUE_ITEM);
   vQueueAddToRegistry(*Queue_UART_HANDLE, "Fila_UART");
+  
+  if(Queue_UART_HANDLE == NULL)
+  {
+    return false;
+  }
 
   // Initialize ring buffer
   RingBuffer_Init(&rbUart, byRingBuffer, sizeof(uint8_t), RB_Size);
@@ -64,6 +69,8 @@ void UART_api_init(void)
   UART.Queue = *Queue_UART_HANDLE;
   UART.SemEOF = xSemaphoreEOF;
   UART.huart = &huart3;
+
+  return true;
 }
 
 /***************************************************************************************************
@@ -148,7 +155,7 @@ static void Command_Parse(char *pbyBuffer)
 
   if(RemoteCRC != LocalCRC)
   {
-    HAL_UART_Transmit_IT(UART.huart, MSG_ERRO_CRC, sizeof(MSG_ERRO_CRC)-1);
+    HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_CRC, strlen(MSG_ERRO_CRC));
     return;
   }
 
@@ -167,7 +174,7 @@ static void Command_Parse(char *pbyBuffer)
   // - Formata a resposta
   
   // - Envia resposta
-  HAL_UART_Transmit_IT(UART.huart, MSG_ACK, sizeof(MSG_ACK)-1);
+  HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ACK, strlen(MSG_ACK));
 }
 
 /***************************************************************************************************
@@ -235,8 +242,10 @@ void UART_check_queue(void)
 
   // Verifica se ha eventos para tratar
   if (xQueueReceive(UART.Queue, &NewEvent, UART_RTOS_DEFAULT_DELAYS) != pdPASS)
+  {
     return;
-
+  }
+  
   /* Verifica qual evento foi recebido */
   switch (NewEvent.enEvent)
   {
@@ -247,15 +256,15 @@ void UART_check_queue(void)
         case Cmd_PrintThis:
           if(NewEvent.bySubCmd == 1)
           {
-            HAL_UART_Transmit_IT(UART.huart, MSG_ERRO_WARN, sizeof(MSG_ERRO_WARN)-1);
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_WARN, strlen(MSG_ERRO_WARN));
           }
           else if(NewEvent.bySubCmd == 2)
           {
-            HAL_UART_Transmit_IT(UART.huart, MSG_ERRO_IRQ0, sizeof(MSG_ERRO_IRQ0)-1);
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_IRQ0, strlen(MSG_ERRO_IRQ0));
           }
           else if(NewEvent.bySubCmd == 3)
           {
-            HAL_UART_Transmit_IT(UART.huart, MSG_ERRO_IRQ1, sizeof(MSG_ERRO_IRQ1)-1);
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_IRQ1, strlen(MSG_ERRO_IRQ1));
           }          
           
         break;

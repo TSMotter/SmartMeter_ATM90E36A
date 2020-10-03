@@ -25,6 +25,7 @@
 ***************************************************************************************************/
 static uint8_t     DummyByte = 0;
 extern UART_app_st  UART;
+extern osThreadId task_atm90e36aHandle;
 
 /***************************************************************************************************
 * @brief 
@@ -32,7 +33,12 @@ extern UART_app_st  UART;
 void start_uart_task(void const * argument)
 {
 
-  UART_api_init();
+  if(!UART_api_init())
+  {
+    while(1);
+  }
+  
+  xTaskNotify(task_atm90e36aHandle, 0, eIncrement);
 
   /* 
     It's mandatory that there are no delays or timeouts in this loop, because 

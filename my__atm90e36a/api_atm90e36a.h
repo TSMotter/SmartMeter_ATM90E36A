@@ -75,9 +75,9 @@ typedef struct
 	atm_drv_st	    Drv;
 
 	QueueHandle_t		Queue;
-	atm_states_st	  State;
-  atm_op_mode_en  Mode;
-	uint16_t	      Retry;
+	atm_states_st	  	State;
+  	atm_op_mode_en  	Mode;
+	uint16_t	      	Retry;
 }ATM90_app_st;
 
 /***************************************************************************************************

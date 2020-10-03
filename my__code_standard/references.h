@@ -70,7 +70,20 @@ Protocolo UART:
 	. <$81,01,0001,058934A8B4,fedf*> (valores tudo errado)
 
 ***************************************************************************************************
-Configurações ATM90E36A:
+ATM90E36A:
+
+Interface:
+	SPI 
+	16bits
+	Clock trailing edge
+	Clock iddle == high
+	CS active == low
+	MSB first
+
+	0x0009 == write to reg. 0x09
+	0x8009 == read from reg. 0x09
+
+Configuracoes:
 
 	- AtmState_ConfigFuncEn
   	1.1) FuncEn0
@@ -87,7 +100,7 @@ Configurações ATM90E36A:
 	  3.1) Voltage sag Th
 			. Ref: Pg 34 of App. Note
 			. Target: Vth = 80% of 127Vrms --> Vth aprox = 100Vrms
-			. RegValue = Vth * 100 * sqrt(2) / (2 * Ugain / 32768) --> ?? Quem é Ugain ??
+			. RegValue = Vth * 100 * sqrt(2) / (2 * Ugain / 32768) --> ?? Quem e Ugain ??
 			. Default value of Ugain = 0xce40
 			. TxValue = 0x1124
 			
@@ -176,7 +189,9 @@ Configurações ATM90E36A:
 			. Absolute value
 			. 16 bits, unit - 0.00032Var
 			. TxValue = 0.064Var = 0x00c8
+		
+		4.12) Configura CS0 register
 
-		4.12) Set ConfigStart to final value
+		4.13) Set ConfigStart to final value
 
 */

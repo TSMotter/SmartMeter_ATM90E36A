@@ -1,8 +1,9 @@
 #MicroXplorer Configuration settings - do not modify
+FREERTOS.CountingSemaphores01=CountingSemSync,3,Dynamic,NULL
 FREERTOS.FootprintOK=true
 FREERTOS.INCLUDE_vTaskDelayUntil=1
 FREERTOS.INCLUDE_xTaskGetHandle=1
-FREERTOS.IPParameters=Tasks01,configENABLE_FPU,configUSE_COUNTING_SEMAPHORES,configQUEUE_REGISTRY_SIZE,configUSE_TIMERS,configTIMER_QUEUE_LENGTH,INCLUDE_vTaskDelayUntil,INCLUDE_xTaskGetHandle,FootprintOK
+FREERTOS.IPParameters=Tasks01,configENABLE_FPU,configUSE_COUNTING_SEMAPHORES,configQUEUE_REGISTRY_SIZE,configUSE_TIMERS,configTIMER_QUEUE_LENGTH,INCLUDE_vTaskDelayUntil,INCLUDE_xTaskGetHandle,FootprintOK,CountingSemaphores01
 FREERTOS.Tasks01=task_atm90e36a,0,256,start_atm90e36a_task,As weak,NULL,Dynamic,NULL,NULL;task_uart,0,256,start_uart_task,As weak,NULL,Dynamic,NULL,NULL;task_leds,0,128,start_leds_task,As weak,NULL,Dynamic,NULL,NULL;task_sx1278,0,256,start_sx1278_task,As weak,NULL,Dynamic,NULL,NULL
 FREERTOS.configENABLE_FPU=1
 FREERTOS.configQUEUE_REGISTRY_SIZE=16

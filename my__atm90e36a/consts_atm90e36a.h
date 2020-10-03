@@ -281,7 +281,7 @@ typedef enum
 #define 	ATM_REG_PPhaseTh_Add 		    0x38
 #define 	ATM_REG_QPhaseTh_Add 		    0x39
 #define 	ATM_REG_SPhaseTh_Add 		    0x3A
-#define 	ATM_REG_CS0 	 		      0x3B
+#define 	ATM_REG_CS0_Add 	 		      0x3B
 #define		ATM_REG_CalStart		    0x40 // Calibration Registers
 #define		ATM_REG_PoffsetA      	0x41
 #define		ATM_REG_QoffsetA      	0x42

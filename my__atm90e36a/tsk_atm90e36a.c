@@ -32,12 +32,22 @@ void start_atm90e36a_task(void const * argument)
 {
 
   // Initialize ATM instance
-  ATM_api_init();
-
-	// Waits a max of 100ms for SPI to be ready
-	if(ATM_wait_SPI_available(100) != ATM_RC_OK)
+  if(!ATM_api_init())
   {
     while(1);
+  }
+
+  // Waits a max of 100ms for SPI to be ready
+  if(ATM_wait_SPI_available(100) != ATM_RC_OK)
+  {
+    while(1);
+  }
+
+  // Waits for other tasks to be ready, so this task can run
+  uint32_t NotifyVal = 0;
+  while(NotifyVal != 2)
+  {
+	  NotifyVal = ulTaskNotifyTake(pdFALSE, ATM_RTOS_DEFAULT_DELAYS);
   }
 
   // Modes of operation are solely changed through Serial commands

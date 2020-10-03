@@ -53,6 +53,7 @@ osThreadId task_atm90e36aHandle;
 osThreadId task_uartHandle;
 osThreadId task_ledsHandle;
 osThreadId task_sx1278Handle;
+osSemaphoreId CountingSemSyncHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -117,6 +118,11 @@ int main(void)
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* definition and creation of CountingSemSync */
+  osSemaphoreDef(CountingSemSync);
+  CountingSemSyncHandle = osSemaphoreCreate(osSemaphore(CountingSemSync), 3);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */

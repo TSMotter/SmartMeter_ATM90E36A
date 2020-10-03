@@ -22,11 +22,11 @@
 #define UART_RTOS_DEFAULT_DELAYS 0
 
 
-#define MSG_ERRO_WARN	  (uint8_t*)"Meter -> Pino WARN\n"
-#define MSG_ERRO_IRQ0	  (uint8_t*)"Meter -> Pino IRQ0\n"
-#define MSG_ERRO_IRQ1	  (uint8_t*)"Meter -> Pino IRQ1\n"
-#define MSG_ERRO_CRC    (uint8_t*)"Meter -> Erro CRC\n"
-#define MSG_ACK         (uint8_t*)"Meter -> Ack\n"
+#define MSG_ERRO_WARN	  (char*)"Meter -> Pino WARN\n"
+#define MSG_ERRO_IRQ0	  (char*)"Meter -> Pino IRQ0\n"
+#define MSG_ERRO_IRQ1	  (char*)"Meter -> Pino IRQ1\n"
+#define MSG_ERRO_CRC    (char*)"Meter -> Erro CRC\n"
+#define MSG_ACK         (char*)"Meter -> Ack\n"
 
 // Defines usados para printar dados na UART
 // caso queria printar timestamp, aumentar para 300
@@ -64,7 +64,7 @@ typedef struct
 /***************************************************************************************************
 * Prototypes
 ***************************************************************************************************/
-void UART_api_init  (void);
+bool UART_api_init  (void);
 
 void UART_Parser_Comando_Burro  (uint8_t *pbyRxBuff);
 void UART_Recebe_Comando        (void);
