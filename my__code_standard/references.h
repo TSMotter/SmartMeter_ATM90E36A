@@ -194,4 +194,37 @@ Configuracoes:
 
 		4.13) Set ConfigStart to final value
 
+Medidas:
+
+	1 	Phase Voltage RMS¹
+	2 	Phase Current RMS¹
+	3 	Active Power¹
+	4 	Reactive Power¹
+	5 	Apparent Power¹
+	6 	Active Fundamental Power¹
+	7 	Active Harmonic Power¹
+	8 	Voltage THD+N
+	9 	Current THD+N
+	10	Frequency
+	11	2th ~ 32th Voltage Harmonic
+	12	2th ~ 32th Current Harmonic
+	
+	13	Forward Active Energy²
+	14	Reverse Active Energy²
+	15	Forward Reactive Energy²
+	16	Reverse Reactive Energy²	
+	17	Apparent Energy²
+	18		. Total (arithmetic sum)
+	19		. Total (vector sum)
+	20	Apparent Power¹
+	21		. Total (vector sum)
+	22	Forward Active Fundamental Energy²
+	23	Reverse Active Fundamental Energy²
+	24	Forward Active Harmonic Energy²
+	25	Reverse Active Harmonic Energy²
+
+
+	¹ : Items that have normal reading (1 16bit register) but also extended reading (+LSB register)
+	² : Registers unit is CF based
+
 */

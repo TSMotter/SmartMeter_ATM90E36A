@@ -24,12 +24,13 @@ static bool walk3_machine(uint16_t addr, uint16_t value, atm_states_en next_stat
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
-ATM90_app_st ATM = {0};
-static QueueHandle_t *Queue_ATM_HANDLE = NULL;
+extern SemaphoreHandle_t SyncMeasureSem;
 
 /***************************************************************************************************
 * Vars
 ***************************************************************************************************/
+ATM90_app_st ATM = {0};
+static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 
 /***************************************************************************************************
 * @brief 
@@ -154,6 +155,7 @@ void ATM_api_check_queue(void)
         break;
         //----------------------------------------------
         case Cmd_OperationMode:
+          ATM.MeasuresBitMap = NewEvent.wDataLen;
           ATM.State.Current = AtmState_Suspended;
           ATM.Mode = OperationMode;
         break;
@@ -489,6 +491,37 @@ void ATM_machine_operation_mode(void)
 {
   switch(ATM.State.Current)
   {
+    //----------------------------------------------
+    case AtmState_Suspended:
+      walk1_machine(ATM_send_event_to_leds(Cmd_BlinkPattern3, 200), AtmState_SubscribeMeasures);
+    break;
+
+    //----------------------------------------------
+    case AtmState_SubscribeMeasures:
+    // Starta timer
+    // inscreve variaveis no processo de leitura 
+    break;
+    //----------------------------------------------
+    case AtmState_Acquiring:
+    {
+      if(xSemaphoreTake(SyncMeasureSem, ATM_RTOS_DEFAULT_DELAYS) == pdPASS)
+      {
+      #if SIMULA_DADOS_ENERGIA == 0
+
+      // Loopa bitmap e realiza leituras, 
+
+      #elif SIMULA_DADOS_ENERGIA == 1
+
+      //
+
+      #endif
+
+      // Envia evento com dados
+
+      }
+    }
+    break;
+    //----------------------------------------------
     default:
     break;
   }  

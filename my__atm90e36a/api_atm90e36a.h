@@ -21,6 +21,7 @@
 ***************************************************************************************************/
 #define MAX_RETRIES 10
 #define ATM_RTOS_DEFAULT_DELAYS	RTOS_DELAY_MS(20)
+#define SIMULA_DADOS_ENERGIA 1
 
 #define zAssert(func)  	 	 			\
     		{                  			\
@@ -53,6 +54,8 @@ typedef enum
 	AtmState_CalibInit,
 				 
 	// States for Operation Op. Mode:
+	AtmState_SubscribeMeasures,
+	AtmState_Acquiring,
 
 } atm_states_en;
 
@@ -74,6 +77,7 @@ typedef struct
 {
 	atm_drv_st	    Drv;
 
+	uint16_t			MeasuresBitMap;
 	QueueHandle_t		Queue;
 	atm_states_st	  	State;
   	atm_op_mode_en  	Mode;
