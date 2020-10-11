@@ -42,6 +42,7 @@ typedef enum
 	// States for Suspended Op. Mode:
 	AtmState_Suspended = 1,
 	AtmState_Stall,
+	AtmState_ReadingReg,
 
 	// States for Configuration Op. Mode:
 	AtmState_SoftReset,
@@ -87,18 +88,16 @@ typedef struct
 /***************************************************************************************************
 * Prototypes
 ***************************************************************************************************/
-bool 	ATM_api_init						(void);
+bool 	ATM_api_init				(void);
 void 	ATM_api_change_state		(atm_states_en next_state);
 void 	ATM_api_check_retry			(void);
 void 	ATM_api_check_hw_pins		(void);
 void 	ATM_api_check_queue			(void);
-void 	ATM_api_periodic_checks	(void);
+void 	ATM_api_periodic_checks		(void);
 
-void ATM_machine_suspended_mode(void);
-void ATM_machine_config_mode(void);
-void ATM_machine_calib_mode(void);
-void ATM_machine_operation_mode(void);
+void 	ATM_machine_suspended_mode	(void);
+void 	ATM_machine_config_mode		(void);
+void 	ATM_machine_calib_mode		(void);
+void 	ATM_machine_operation_mode	(void);
 
-bool ATM_send_event_to_leds(uint8_t Command, uint16_t wMillisec);
-bool ATM_send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint8_t *pData, uint16_t DataLen);
 #endif

@@ -47,7 +47,10 @@ void start_atm90e36a_task(void const * argument)
   uint32_t NotifyVal = 0;
   while(NotifyVal != 2)
   {
-	  NotifyVal = ulTaskNotifyTake(pdFALSE, ATM_RTOS_DEFAULT_DELAYS);
+	  if(ulTaskNotifyTake(pdFALSE, ATM_RTOS_DEFAULT_DELAYS))
+	  {
+		  NotifyVal++;
+	  }
   }
 
   // Modes of operation are solely changed through Serial commands

@@ -50,6 +50,15 @@ static leds_periods_en map_to_leds_period(uint16_t periodo)
 ***************************************************************************************************/
 bool LEDS_api_init(void)
 {
+  // Cria fila LEDS
+  Queue_LEDS_HANDLE = RTOS_Get_Queue_Idx(QueueIDX_LEDS);
+  *Queue_LEDS_HANDLE = xQueueCreate(32, SIZE_OF_QUEUE_ITEM);
+  if(Queue_LEDS_HANDLE == NULL)
+  {
+    return false;
+  }
+  vQueueAddToRegistry (*Queue_LEDS_HANDLE, "Fila_LEDS");
+
   LEDS_hw_init();
 
   if(!LEDS_drv_init(&LEDS))
@@ -57,15 +66,6 @@ bool LEDS_api_init(void)
     return false;
   }
   
-  // Cria fila LEDS
-  Queue_LEDS_HANDLE = RTOS_Get_Queue_Idx(QueueIDX_LEDS);
-  *Queue_LEDS_HANDLE = xQueueCreate(32, SIZE_OF_QUEUE_ITEM);
-  vQueueAddToRegistry (*Queue_LEDS_HANDLE, "Fila_LEDS");
-
-  if(Queue_LEDS_HANDLE == NULL)
-  {
-    return false;
-  }
 
   return true;
 }

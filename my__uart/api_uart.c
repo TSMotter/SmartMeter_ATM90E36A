@@ -9,6 +9,7 @@
 * Includes
 ***************************************************************************************************/
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "api_uart.h"
 #include "rtos_utility.h"
@@ -19,7 +20,7 @@ static void Insert_Byte_Buffer_Linear_Manager (uint8_t byByte);
 static void Insert_Byte_Buffer_Linear         (uint8_t byByte);
 static void Buffer_Clear                      (void);
 static void Command_Parse                     (char *pbyBuffer);
-static bool Enfilera_Evento                   (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand);
+static bool send_event_to_atm                 (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand);
 
 /***************************************************************************************************
 * Externals
@@ -39,7 +40,7 @@ static ReceiveCommand_st      UARTStructure = {0};
 
 
 static SemaphoreHandle_t 	xSemaphoreEOF;
-static QueueHandle_t 		  *Queue_UART_HANDLE;
+static QueueHandle_t 		  *Queue_UART_HANDLE = NULL;
 static RINGBUFF_T         rbUart;
 static uint8_t            byRingBuffer[RB_Size] = {0};
 
@@ -51,12 +52,12 @@ bool UART_api_init(void)
   // Initialize UART queue
   Queue_UART_HANDLE = RTOS_Get_Queue_Idx(QueueIDX_UART);
   *Queue_UART_HANDLE = xQueueCreate(32, SIZE_OF_QUEUE_ITEM);
-  vQueueAddToRegistry(*Queue_UART_HANDLE, "Fila_UART");
-  
   if(Queue_UART_HANDLE == NULL)
   {
     return false;
-  }
+  }  
+  vQueueAddToRegistry(*Queue_UART_HANDLE, "Fila_UART");
+
 
   // Initialize ring buffer
   RingBuffer_Init(&rbUart, byRingBuffer, sizeof(uint8_t), RB_Size);
@@ -169,18 +170,19 @@ static void Command_Parse(char *pbyBuffer)
     char aa[3] = {str_data[2*k], str_data[(2*k)+1], '\0'};
     LocalData[k] = strtoul(aa, NULL, 16);    
   } 
-  memcpy(UARTStructure.Data, LocalData, 50);
+  memcpy(UARTStructure.Data, LocalData, UARTStructure.DataLen);
   
   // - Formata a resposta
   
   // - Envia resposta
   HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ACK, strlen(MSG_ACK));
+
 }
 
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool Enfilera_Evento(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand)
+static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand)
 {
   xQueueHandle* posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_ATM);
 
@@ -224,11 +226,11 @@ bool UART_Envia_Eventos(void)
 {
   if (UARTStructure.ID == 1)
   {
-    return Enfilera_Evento (EvntFromUARTtoATM, UARTStructure.SubID, UARTStructure.DataLen);
+    return send_event_to_atm(EvntFromUARTtoATM, UARTStructure.SubID, UARTStructure.DataLen);
   }
   else if (UARTStructure.ID == 2)
   {
-    return Enfilera_Evento (EvntFromUARTtoPCF, UARTStructure.SubID, UARTStructure.DataLen);
+    return send_event_to_atm(EvntFromUARTtoPCF, UARTStructure.SubID, UARTStructure.DataLen);
   }
   return false;
 }
@@ -245,7 +247,10 @@ void UART_check_queue(void)
   {
     return;
   }
-  
+
+  char *DataToPrint = NULL;
+  char reg_value_in_char[5] = {'\0', '\0', '\0', '\0', '\0'};
+
   /* Verifica qual evento foi recebido */
   switch (NewEvent.enEvent)
   {
@@ -254,19 +259,38 @@ void UART_check_queue(void)
       {
         //----------------------------------------------------------
         case Cmd_PrintThis:
-          if(NewEvent.bySubCmd == 1)
+          DataToPrint = malloc(40*sizeof(char));
+          if(DataToPrint == NULL)
           {
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_WARN, strlen(MSG_ERRO_WARN));
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_MALLOC, strlen(MSG_ERRO_MALLOC));
+            return;
+          }
+          if(NewEvent.bySubCmd == 0)
+          {
+            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
+            sprintf(DataToPrint, MSG_PRINT_THIS, reg_value_in_char);
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
+
+          }
+          else if(NewEvent.bySubCmd == 1)
+          {
+            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
+            sprintf(DataToPrint, MSG_ERRO_WARN, reg_value_in_char);
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
           }
           else if(NewEvent.bySubCmd == 2)
           {
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_IRQ0, strlen(MSG_ERRO_IRQ0));
+            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
+            sprintf(DataToPrint, MSG_ERRO_IRQ0, reg_value_in_char);            
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
           }
           else if(NewEvent.bySubCmd == 3)
           {
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_IRQ1, strlen(MSG_ERRO_IRQ1));
+            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
+            sprintf(DataToPrint, MSG_ERRO_IRQ1, reg_value_in_char);            
+            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
           }          
-          
+          free(DataToPrint);
         break;
 
         //----------------------------------------------------------

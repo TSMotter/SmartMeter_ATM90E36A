@@ -137,19 +137,19 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of task_atm90e36a */
-  osThreadDef(task_atm90e36a, start_atm90e36a_task, osPriorityNormal, 0, 256);
+  osThreadDef(task_atm90e36a, start_atm90e36a_task, osPriorityNormal, 0, 1024);
   task_atm90e36aHandle = osThreadCreate(osThread(task_atm90e36a), NULL);
 
   /* definition and creation of task_uart */
-  osThreadDef(task_uart, start_uart_task, osPriorityNormal, 0, 256);
+  osThreadDef(task_uart, start_uart_task, osPriorityNormal, 0, 1024);
   task_uartHandle = osThreadCreate(osThread(task_uart), NULL);
 
   /* definition and creation of task_leds */
-  osThreadDef(task_leds, start_leds_task, osPriorityNormal, 0, 128);
+  osThreadDef(task_leds, start_leds_task, osPriorityNormal, 0, 512);
   task_ledsHandle = osThreadCreate(osThread(task_leds), NULL);
 
   /* definition and creation of task_sx1278 */
-  osThreadDef(task_sx1278, start_sx1278_task, osPriorityNormal, 0, 256);
+  osThreadDef(task_sx1278, start_sx1278_task, osPriorityNormal, 0, 512);
   task_sx1278Handle = osThreadCreate(osThread(task_sx1278), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

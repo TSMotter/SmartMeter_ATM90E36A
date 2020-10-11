@@ -37,8 +37,6 @@ void start_leds_task(void const * argument)
 
   xTaskNotify(task_atm90e36aHandle, 0, eIncrement);
 
-  LEDS_blink_pattern1(SLOW_LED);
-
   for(;;)
   {
     LEDS_check_queue();

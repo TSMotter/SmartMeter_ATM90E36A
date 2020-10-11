@@ -50,3 +50,17 @@ ATM suspended mode
 0
 5
 
+SEND
+4
+ATM Read Va
+24 30 31 2C 30 35 2C 30 30 64 39 2C 2C 61 66 39 39 2A
+0
+5
+
+SEND
+5
+ATM Read HarmStart
+24 30 31 2C 30 35 2C 30 30 35 30 2C 2C 33 32 38 37 2A
+0
+5
+

@@ -10,6 +10,7 @@
 ***************************************************************************************************/
 #include "api_atm90e36a.h"
 #include <string.h>
+#include <stdlib.h>
 
 /***************************************************************************************************
 * Private Functions Prototypes
@@ -21,6 +22,9 @@ static bool ATM_config_reg_CS(uint16_t reg);
 static bool walk1_machine(bool method, atm_states_en next_state);
 static bool walk2_machine(atm_result_code_en method, atm_states_en next_state);
 static bool walk3_machine(uint16_t addr, uint16_t value, atm_states_en next_state);
+
+static bool send_event_to_leds(uint8_t Command, uint16_t wMillisec);
+static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
@@ -37,19 +41,20 @@ static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 ***************************************************************************************************/
 bool ATM_api_init(void)
 {
-  ATM_hw_init();
-
-  ATM_drv_init(&ATM.Drv);
-
 	// Cria fila ATM
 	Queue_ATM_HANDLE = RTOS_Get_Queue_Idx(QueueIDX_ATM);
 	*Queue_ATM_HANDLE = xQueueCreate(32, SIZE_OF_QUEUE_ITEM);
-	vQueueAddToRegistry(*Queue_ATM_HANDLE, "Fila_ATM");
-  
   if(Queue_ATM_HANDLE == NULL)
   {
     return false;
   }
+
+  ATM_hw_init();
+
+  ATM_drv_init(&ATM.Drv);
+
+	vQueueAddToRegistry(*Queue_ATM_HANDLE, "Fila_ATM");
+  
 
   ATM.State.Current = AtmState_Suspended;
   ATM.Mode = SuspendedMode;
@@ -87,32 +92,31 @@ void ATM_api_check_retry(void)
 void ATM_api_check_hw_pins(void)
 {
   bool flag = false;
+  uint16_t data = 0;
 
   if(ATM.Drv.monitor_warn())
   {
     flag = true;
-    uint16_t data = 0;
-    ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data);
-    // Send event to UART to print error msg
-    ATM_send_event_to_uart(Cmd_PrintThis, 1, NULL, 0);
+    if(ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data) == ATM_RC_OK)
+    {
+      send_event_to_uart(Cmd_PrintThis, 1, data);
+    }
   }
   else if(ATM.Drv.monitor_irq0())
   {
     flag = true;
-    uint16_t data = 0;
-    ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data);
-    #warning Print data as well
-    // Send Event to UART
-    ATM_send_event_to_uart(Cmd_PrintThis, 2, NULL, 0);
+    if(ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data) == ATM_RC_OK)
+    {
+      send_event_to_uart(Cmd_PrintThis, 2, data);
+    }
   }
   else if(ATM.Drv.monitor_irq1())
   {
     flag = true;
-    uint16_t data = 0;
-    ATM.Drv.read_reg(ATM_REG_SysStatus1_Add, &data);
-
-    // Send Event to UART
-    ATM_send_event_to_uart(Cmd_PrintThis, 3, NULL, 0);
+    if(ATM.Drv.read_reg(ATM_REG_SysStatus1_Add, &data) == ATM_RC_OK)
+    {
+      send_event_to_uart(Cmd_PrintThis, 3, data);
+    }
   }  
   if(flag)
   {
@@ -155,10 +159,16 @@ void ATM_api_check_queue(void)
         break;
         //----------------------------------------------
         case Cmd_OperationMode:
-          ATM.MeasuresBitMap = NewEvent.wDataLen;
+          ATM.MeasuresBitMap = NewEvent.bySubCmd;
           ATM.State.Current = AtmState_Suspended;
           ATM.Mode = OperationMode;
         break;
+        //----------------------------------------------
+        case Cmd_ReadSpecificRegister:
+          ATM.MeasuresBitMap = NewEvent.bySubCmd;
+          ATM.State.Current = AtmState_ReadingReg;
+          ATM.Mode = SuspendedMode;
+        break;        
         //----------------------------------------------
         default:
         break;    
@@ -345,13 +355,24 @@ void ATM_machine_suspended_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(ATM_send_event_to_leds(Cmd_BlinkPattern1, 800), AtmState_Stall);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern1, 800), AtmState_Stall);
     break;
     //----------------------------------------------
     case AtmState_Stall:
       // does nothing
       osDelay(10);
     break;
+    //----------------------------------------------
+    case AtmState_ReadingReg:
+    {
+      uint16_t LocalReadVal = 0;
+
+      if(ATM.Drv.read_reg((uint8_t)ATM.MeasuresBitMap, &LocalReadVal) == ATM_RC_OK)
+      {
+        walk1_machine(send_event_to_uart(Cmd_PrintThis, 0, LocalReadVal), AtmState_Stall);
+      }
+    }
+    break;    
     //----------------------------------------------
     default:
     break;
@@ -472,7 +493,7 @@ void ATM_machine_calib_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(ATM_send_event_to_leds(Cmd_BlinkPattern3, 500), AtmState_CalibInit);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 500), AtmState_CalibInit);
     break;
     //----------------------------------------------
     case AtmState_CalibInit:
@@ -493,7 +514,7 @@ void ATM_machine_operation_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(ATM_send_event_to_leds(Cmd_BlinkPattern3, 200), AtmState_SubscribeMeasures);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 200), AtmState_SubscribeMeasures);
     break;
 
     //----------------------------------------------
@@ -544,7 +565,7 @@ void ATM_machine_operation_mode(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-bool ATM_send_event_to_leds(uint8_t Command, uint16_t wMillisec)
+static bool send_event_to_leds(uint8_t Command, uint16_t wMillisec)
 {
   xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_LEDS);
 
@@ -561,15 +582,15 @@ bool ATM_send_event_to_leds(uint8_t Command, uint16_t wMillisec)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-bool ATM_send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint8_t *pData, uint16_t DataLen)
+static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
 {
   xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_UART);
-
   GenericQueueData_st stEvent;
+
   stEvent.enEvent = EvntFromATMtoUART;
   stEvent.byCmd = Command;
   stEvent.bySubCmd = SubCommand;
-  memcpy(stEvent.pbyData, pData, DataLen);
+  stEvent.pbyData = NULL;
   stEvent.wDataLen = DataLen;
 
   return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, ATM_RTOS_DEFAULT_DELAYS);
