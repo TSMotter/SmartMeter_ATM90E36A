@@ -56,6 +56,7 @@ void start_uart_task(void const * argument)
     }
 
     UART_check_queue();
+    UART_check_EnergyQueue();
   }
 }
 
@@ -72,7 +73,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   if(ReceivedByte == GM_EOF)
   {
     xSemaphoreGiveFromISR(UART.SemEOF, &xHigherPriorityTaskWoken);
+    return;
   }
+  HAL_UART_Receive_IT(UART.huart, &DummyByte, 1);
 }
 
 /***************************************************************************************************

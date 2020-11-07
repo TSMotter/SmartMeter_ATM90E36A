@@ -49,9 +49,11 @@ bool RTOS_Send_Data_To_Specific_Queue(xQueueHandle* posQueHandle, GenericQueueDa
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-bool RTOS_Send_Data_To_Energy_Queue(xQueueHandle* posQueHandle, EnergyQueueData_st* pstEvt, portTickType xTicksToWait)
+bool RTOS_Send_Data_To_Energy_Queue(uint32_t* data, portTickType xTicksToWait)
 {
-  if ( xQueueSendToBack(*posQueHandle, (void*)pstEvt, xTicksToWait) == pdPASS )
+  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_ENERGY);
+
+  if (xQueueSendToBack(*posQueEvtHandle, (void*)data, xTicksToWait) == pdPASS )
   {
     return true;
   }

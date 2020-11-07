@@ -58,6 +58,7 @@ typedef struct
 {
   RINGBUFF_T          *Rb;
   QueueHandle_t		    Queue;
+  QueueHandle_t       EnergyQueue;
   SemaphoreHandle_t   SemEOF;
   UART_HandleTypeDef  *huart;
 }UART_app_st;
@@ -70,8 +71,8 @@ bool UART_api_init  (void);
 void UART_Parser_Comando_Burro  (uint8_t *pbyRxBuff);
 void UART_Recebe_Comando        (void);
 bool UART_Envia_Eventos         (void);
-void UART_check_queue      (void);
-
+void UART_check_queue           (void);
+void UART_check_EnergyQueue     (void);
 uint8_t Convert_To_Print_Timestamp  (uint32_t dwDadoIn, char *pbyFullOutputVect);
 uint8_t Convert_To_Print_TypeA      (uint16_t wDadoIn, char *pbyFullOutputVect, char *Unidade, uint8_t byPhase);
 uint8_t Convert_To_Print_TypeB      (uint16_t wDadoIn, uint8_t Indentificador, char *pbyFullOutputVect, char *Unidade, uint8_t byPhase);

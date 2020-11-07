@@ -205,7 +205,7 @@ Medidas:
 	7 	Active Harmonic Power¹
 	8 	Voltage THD+N
 	9 	Current THD+N
-	10	Frequency
+	10	Frequency (Usa Va como referencia)
 	11	2th ~ 32th Voltage Harmonic
 	12	2th ~ 32th Current Harmonic
 	

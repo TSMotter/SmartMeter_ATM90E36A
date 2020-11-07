@@ -488,7 +488,8 @@ typedef enum
 #define ATM_REG_MASK_SysStatus1     0xCEFF
 #define ATM_REG_MASK_PMAvgSamples   0xFFFF
 
-/* 8kHz sample rate
+/* 
+* 8kHz sample rate
 * 1 amostra a cada 125us
 * 160 amostras duram 20ms
 * 60Hz - 16,6ms - 133 amostras a 8khz
@@ -497,19 +498,17 @@ typedef enum
 
 
 // Defines para trabalhar com leitura de tensao e corrente RMS
-#define ATM_REG_OFFSET_LINE_VOLTAGE_RMS           0xD8
-#define ATM_REG_OFFSET_LINE_VOLTAGE_RMS_LSB       0xE8
-#define ATM_REG_OFFSET_LINE_CURRENT_RMS           0xDC
-#define ATM_REG_OFFSET_ACTIVE_POWER               0xB0
-#define ATM_REG_OFFSET_REACTIVE_POWER             0xB4
-#define ATM_REG_OFFSET_APARENT_POWER              0xB8
-#define ATM_REG_OFFSET_POWER_FACTOR               0xBC
-#define ATM_REG_OFFSET_ACTIVE_FUNDAMENTAL_POWER   0xD0
-#define ATM_REG_OFFSET_ACTIVE_HARMONIC_POWER      0xD4
-#define ATM_REG_OFFSET_VOLTAGE_THD                0xF1
-#define ATM_REG_OFFSET_CURRENT_THD                0xF5
-
-
-
+#define ATM_REG_LineVoltageRms_Offset            0xD8
+#define ATM_REG_LineVoltageRmsLsb_Offset         0xE8
+#define ATM_REG_LineCurrentRms_Offset            0xDC
+//#define ATM_REG_LineCurrentRmsLsb_Offset        0xE8
+#define ATM_REG_ActivePower_Offset               0xB0
+#define ATM_REG_ReactivePower_Offset             0xB4
+#define ATM_REG_AparantPower_Offset              0xB8
+#define ATM_REG_PowerFactor_Offset               0xBC
+#define ATM_REG_ActiveFundamentalPower_Offset    0xD0
+#define ATM_REG_ActiveHarmonicPower_Offset       0xD4
+#define ATM_REG_VoltageTHD_Offset                0xF1
+#define ATM_REG_CurrentTHD_Offset                0xF5
 
 #endif

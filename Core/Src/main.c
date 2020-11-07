@@ -145,7 +145,7 @@ int main(void)
   task_uartHandle = osThreadCreate(osThread(task_uart), NULL);
 
   /* definition and creation of task_leds */
-  osThreadDef(task_leds, start_leds_task, osPriorityNormal, 0, 512);
+  osThreadDef(task_leds, start_leds_task, osPriorityNormal, 0, 128);
   task_ledsHandle = osThreadCreate(osThread(task_leds), NULL);
 
   /* definition and creation of task_sx1278 */
@@ -388,7 +388,7 @@ static void MX_USART3_UART_Init(void)
 
   /* USER CODE END USART3_Init 1 */
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
+  huart3.Init.BaudRate = 57600;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;

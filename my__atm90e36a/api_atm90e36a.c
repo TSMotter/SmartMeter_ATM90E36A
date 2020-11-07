@@ -15,26 +15,56 @@
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
-static bool ATM_config_reg_MMode0(void);
-static bool ATM_config_reg_MMode1(void);
-static bool ATM_config_reg_CS(uint16_t reg);
+static bool config_reg_MMode0 (void);
+static bool config_reg_MMode1 (void);
+static bool config_reg_CS     (uint16_t reg);
 
-static bool walk1_machine(bool method, atm_states_en next_state);
-static bool walk2_machine(atm_result_code_en method, atm_states_en next_state);
-static bool walk3_machine(uint16_t addr, uint16_t value, atm_states_en next_state);
+static bool walk1_machine (bool method, atm_states_en next_state);
+static bool walk2_machine (atm_result_code_en method, atm_states_en next_state);
+static bool walk3_machine (uint16_t addr, uint16_t value, atm_states_en next_state);
 
-static bool send_event_to_leds(uint8_t Command, uint16_t wMillisec);
-static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
+static bool send_event_to_leds  (uint8_t Command, uint16_t wMillisec);
+static bool send_event_to_uart  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
+
+static bool assina_medidas  (uint8_t *data, uint16_t len);
+static bool realiza_medidas (void);
+
+static bool Acquire_Va      (uint16_t *read_val); 	
+//static bool Acquire_Vb      (uint16_t *read_val); 	
+//static bool Acquire_Vc      (uint16_t *read_val); 	
+static bool Acquire_Ia      (uint16_t *read_val); 	
+//static bool Acquire_Ib      (uint16_t *read_val); 	
+//static bool Acquire_Ic      (uint16_t *read_val); 	
+static bool Acquire_Pa      (uint16_t *read_val); 	
+//static bool Acquire_Pb      (uint16_t *read_val); 	
+//static bool Acquire_Pc      (uint16_t *read_val); 	
+static bool Acquire_Qa      (uint16_t *read_val); 	
+//static bool Acquire_Qb      (uint16_t *read_val); 	
+//static bool Acquire_Qc      (uint16_t *read_val); 	
+static bool Acquire_Sa      (uint16_t *read_val); 	
+//static bool Acquire_Sb      (uint16_t *read_val); 	
+//static bool Acquire_Sc      (uint16_t *read_val); 	
+//static bool Acquire_PFa     (uint16_t *read_val); 	 
+//static bool Acquire_PFb     (uint16_t *read_val); 	 
+//static bool Acquire_PFc     (uint16_t *read_val); 	 
+static bool Acquire_Pa_fund (uint16_t *read_val);
+//static bool Acquire_Pb_fund (uint16_t *read_val);
+//static bool Acquire_Pc_fund (uint16_t *read_val);
+static bool Acquire_Pa_harm (uint16_t *read_val);
+//static bool Acquire_Pb_harm (uint16_t *read_val);
+//static bool Acquire_Pc_harm (uint16_t *read_val);
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
 extern SemaphoreHandle_t SyncMeasureSem;
-
+extern TIM_HandleTypeDef htim3;
 /***************************************************************************************************
 * Vars
 ***************************************************************************************************/
 ATM90_app_st ATM = {0};
 static QueueHandle_t *Queue_ATM_HANDLE = NULL;
+
+static assinatura_de_medidas_st vetor_medidas_assinadas[MAX_MEDIDAS_ASSINADAS] = {0};
 
 /***************************************************************************************************
 * @brief 
@@ -168,7 +198,15 @@ void ATM_api_check_queue(void)
           ATM.MeasuresBitMap = NewEvent.bySubCmd;
           ATM.State.Current = AtmState_ReadingReg;
           ATM.Mode = SuspendedMode;
-        break;        
+        break;
+        //----------------------------------------------
+        case Cmd_SignMeasurements:
+          if(assina_medidas(NewEvent.pbyData, NewEvent.wDataLen))
+          {
+            ATM.State.Current = AtmState_SubscribeMeasures;
+            ATM.Mode = OperationMode;
+          }
+        break;         
         //----------------------------------------------
         default:
         break;    
@@ -195,7 +233,41 @@ void ATM_api_periodic_checks(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool ATM_config_reg_MMode0(void)
+static bool send_event_to_leds(uint8_t Command, uint16_t wMillisec)
+{
+  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_LEDS);
+
+  GenericQueueData_st stEvent;
+  stEvent.enEvent = EvntFromATMtoLEDS;
+  stEvent.byCmd = Command;
+  stEvent.bySubCmd = 0;
+  stEvent.pbyData = NULL;
+  stEvent.wDataLen = wMillisec;
+
+  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, ATM_RTOS_DEFAULT_DELAYS);
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
+{
+  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_UART);
+  GenericQueueData_st stEvent;
+
+  stEvent.enEvent = EvntFromATMtoUART;
+  stEvent.byCmd = Command;
+  stEvent.bySubCmd = SubCommand;
+  stEvent.pbyData = NULL;
+  stEvent.wDataLen = DataLen;
+
+  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, ATM_RTOS_DEFAULT_DELAYS);
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool config_reg_MMode0(void)
 {
   uint16_t LocalReadVal = 0;
   
@@ -223,7 +295,7 @@ static bool ATM_config_reg_MMode0(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool ATM_config_reg_MMode1(void)
+static bool config_reg_MMode1(void)
 {
   uint16_t LocalReadVal = 0;
   
@@ -255,7 +327,7 @@ static bool ATM_config_reg_MMode1(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool ATM_config_reg_CS(uint16_t reg)
+static bool config_reg_CS(uint16_t reg)
 {
   uint16_t LocalReadVal = 0;
 
@@ -270,13 +342,6 @@ static bool ATM_config_reg_CS(uint16_t reg)
   ATM.Retry++;
   return false;  
 }
-
-
-
-
-
-
-
 
 
 
@@ -446,10 +511,10 @@ void ATM_machine_config_mode(void)
       // Default
 
       // 4.4) MMode0
-      zAssert(walk1_machine(ATM_config_reg_MMode0(), 0));
+      zAssert(walk1_machine(config_reg_MMode0(), 0));
 
       // 4.5) MMode1
-      zAssert(walk1_machine(ATM_config_reg_MMode1(), 0));
+      zAssert(walk1_machine(config_reg_MMode1(), 0));
 
       // 4.6) P Start Th
       zAssert(walk3_machine(ATM_REG_PStartTh_Add, 0x0bb8, 0));
@@ -470,7 +535,7 @@ void ATM_machine_config_mode(void)
       zAssert(walk3_machine(ATM_REG_SPhaseTh_Add, 0x00c8, 0));
 
       // 4.12) Configura CS0 register
-      zAssert(walk1_machine(ATM_config_reg_CS(ATM_REG_CS0_Add), 0));
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS0_Add), 0));
 
       // 4.13) Set ConfigStart to final value
       zAssert(walk3_machine(ATM_REG_ConfigStart_Add, CS_REG_Value_Operation, AtmState_Suspended));
@@ -519,26 +584,22 @@ void ATM_machine_operation_mode(void)
 
     //----------------------------------------------
     case AtmState_SubscribeMeasures:
-    // Starta timer
-    // inscreve variaveis no processo de leitura 
+    // inscreve variaveis no processo de leitura
+    assina_medidas(NULL, 0);
+
+    // Starta timer 
+    HAL_TIM_Base_Start_IT(&htim3);
+
+    // Muda de estado
+    ATM_api_change_state(AtmState_Acquiring);
+
     break;
     //----------------------------------------------
     case AtmState_Acquiring:
     {
       if(xSemaphoreTake(SyncMeasureSem, ATM_RTOS_DEFAULT_DELAYS) == pdPASS)
       {
-      #if SIMULA_DADOS_ENERGIA == 0
-
-      // Loopa bitmap e realiza leituras, 
-
-      #elif SIMULA_DADOS_ENERGIA == 1
-
-      //
-
-      #endif
-
-      // Envia evento com dados
-
+        realiza_medidas();
       }
     }
     break;
@@ -548,15 +609,66 @@ void ATM_machine_operation_mode(void)
   }  
 }
 
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool assina_medidas(uint8_t *data, uint16_t len)
+{
+  // Versao dummy, apenas para botar pra funcionar
+  for(uint8_t k = 0; k < 7; k++)
+  {
+    vetor_medidas_assinadas[k].id = (k+1);
+  }
 
+  uint16_t idx = 0;
 
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Va;
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Ia;
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Pa;
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Qa;
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Sa;
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Pa_fund;
+  vetor_medidas_assinadas[idx++].read_func = Acquire_Pa_harm;
+ 
+  return true;
+}
 
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool realiza_medidas(void)
+{
 
+  #if SIMULA_DADOS_ENERGIA == 0
 
+    uint32_t dado_de_envio = 0;
+    uint16_t temp_read_val = 0, rc = 0;
+    
+    // Loopa bitmap e realiza leituras, 
+    for(uint8_t k = 0; k < MAX_MEDIDAS_ASSINADAS; k++)
+    {
+      if(vetor_medidas_assinadas[k].id)
+      {
+        vetor_medidas_assinadas[k].read_func(&temp_read_val);
+        uint16_t temp = vetor_medidas_assinadas[k].id;
+        dado_de_envio = (uint32_t)(temp << 16);
+        dado_de_envio |= (uint32_t)(temp_read_val);
 
+        // Envia evento para task UART
+        rc += RTOS_Send_Data_To_Energy_Queue(&dado_de_envio, ATM_RTOS_DEFAULT_DELAYS);
+      }
+    }
 
+    if(rc >= MAX_MEDIDAS_ASSINADAS)
+    {
+      return true;
+    }
+    return false;
 
+  #elif SIMULA_DADOS_ENERGIA == 1
 
+  #endif
+}
 
 
 
@@ -565,33 +677,186 @@ void ATM_machine_operation_mode(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool send_event_to_leds(uint8_t Command, uint16_t wMillisec)
+bool atm_acquire_line_voltage(phase_en phase, uint16_t *val)
 {
-  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_LEDS);
+  if(ATM.Drv.read_reg((ATM_REG_LineVoltageRms_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }  
+  return false;
+}
 
-  GenericQueueData_st stEvent;
-  stEvent.enEvent = EvntFromATMtoLEDS;
-  stEvent.byCmd = Command;
-  stEvent.bySubCmd = 0;
-  stEvent.pbyData = NULL;
-  stEvent.wDataLen = wMillisec;
+static bool Acquire_Va(uint16_t *read_val)
+{
+  return atm_acquire_line_voltage(PHASE_A, read_val);
+}
+//static bool Acquire_Vb(uint16_t *read_val)
+//{
+//  return atm_acquire_line_voltage(PHASE_B, read_val);
+//}
+//static bool Acquire_Vc(uint16_t *read_val)
+//{
+//  return atm_acquire_line_voltage(PHASE_C, read_val);
+//}
 
-  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, ATM_RTOS_DEFAULT_DELAYS);
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool atm_acquire_line_current(phase_en phase, uint16_t *val)
+{
+  if(ATM.Drv.read_reg((ATM_REG_LineCurrentRms_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
+}
+
+static bool Acquire_Ia(uint16_t *read_val)
+{
+  return atm_acquire_line_current(PHASE_A, read_val);
+}
+//static bool Acquire_Ib(uint16_t *read_val)
+//{
+//  return atm_acquire_line_current(PHASE_B, read_val);
+//}
+//static bool Acquire_Ic(uint16_t *read_val)
+//{
+//  return atm_acquire_line_current(PHASE_C, read_val);
+//}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool atm_acquire_active_power(phase_en phase, uint16_t *val)
+{
+  if(ATM.Drv.read_reg((ATM_REG_ActivePower_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
+}
+
+static bool Acquire_Pa(uint16_t *read_val)
+{
+  return atm_acquire_active_power(PHASE_A, read_val);
+}
+//static bool Acquire_Pb(uint16_t *read_val)
+//{
+//  return atm_acquire_active_power(PHASE_B, read_val);
+//}
+//static bool Acquire_Pc(uint16_t *read_val)
+//{
+//  return atm_acquire_active_power(PHASE_C, read_val);
+//}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool atm_acquire_reactive_power(phase_en phase, uint16_t *val)
+{
+  if(ATM.Drv.read_reg((ATM_REG_ReactivePower_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
+}
+
+static bool Acquire_Qa(uint16_t *read_val)
+{
+  return atm_acquire_reactive_power(PHASE_A, read_val);
+}
+//static bool Acquire_Qb(uint16_t *read_val)
+//{
+//  return atm_acquire_reactive_power(PHASE_B, read_val);
+//}
+//static bool Acquire_Qc(uint16_t *read_val)
+//{
+//  return atm_acquire_reactive_power(PHASE_C, read_val);
+//}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool atm_acquire_aparent_power(phase_en phase, uint16_t *val)
+{
+  if(ATM.Drv.read_reg((ATM_REG_AparantPower_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
+}
+
+static bool Acquire_Sa(uint16_t *read_val)
+{
+  return atm_acquire_aparent_power(PHASE_A, read_val);
+}
+//static bool Acquire_Sb(uint16_t *read_val)
+//{
+//  return atm_acquire_aparent_power(PHASE_B, read_val);
+//}
+//static bool Acquire_Sc(uint16_t *read_val)
+//{
+//  return atm_acquire_aparent_power(PHASE_C, read_val);
+//}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool atm_acquire_power_factor(phase_en phase, uint16_t *val)
+{
+  if(ATM.Drv.read_reg((ATM_REG_PowerFactor_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
 }
 
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
+bool atm_acquire_active_fundamental_power(phase_en phase, uint16_t *val)
 {
-  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_UART);
-  GenericQueueData_st stEvent;
-
-  stEvent.enEvent = EvntFromATMtoUART;
-  stEvent.byCmd = Command;
-  stEvent.bySubCmd = SubCommand;
-  stEvent.pbyData = NULL;
-  stEvent.wDataLen = DataLen;
-
-  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, ATM_RTOS_DEFAULT_DELAYS);
+  if(ATM.Drv.read_reg((ATM_REG_ActiveFundamentalPower_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
 }
+
+static bool Acquire_Pa_fund(uint16_t *read_val)
+{
+  return atm_acquire_active_fundamental_power(PHASE_A, read_val);
+}
+//static bool Acquire_Pb_fund(uint16_t *read_val)
+//{
+//  return atm_acquire_active_fundamental_power(PHASE_B, read_val);
+//}
+//static bool Acquire_Pc_fund(uint16_t *read_val)
+//{
+//  return atm_acquire_active_fundamental_power(PHASE_C, read_val);
+//}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool atm_acquire_active_harmonic_power(phase_en phase, uint16_t *val)
+{
+  if(ATM.Drv.read_reg((ATM_REG_ActiveHarmonicPower_Offset + phase), val) == ATM_RC_OK)
+  {
+    return true;
+  }
+   return false;  
+}
+
+static bool Acquire_Pa_harm(uint16_t *read_val)
+{
+  return atm_acquire_active_harmonic_power(PHASE_A, read_val);
+}
+//static bool Acquire_Pb_harm(uint16_t *read_val)
+//{
+//  return atm_acquire_active_harmonic_power(PHASE_B, read_val);
+//}
+//static bool Acquire_Pc_harm(uint16_t *read_val)
+//{
+//  return atm_acquire_active_harmonic_power(PHASE_C, read_val);
+//}

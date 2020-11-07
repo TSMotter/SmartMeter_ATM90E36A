@@ -54,6 +54,8 @@
 #define subCmd_SoftwareReset 1
 #define subCmd_HardwareReset 2
 
+#define Cmd_SignMeasurements 7
+
 //------------------------------------------------------------------------
 // LISTA DE COMANDOS ATM -> UART
 //------------------------------------------------------------------------
@@ -99,7 +101,6 @@ typedef enum
 {
   EvntFromATMtoUART,
   EvntFromATMtoLEDS,
-  EvntFromATMtoENERGY,
 
   EvntFromUARTtoATM,
   EvntFromUARTtoPCF,
@@ -120,9 +121,7 @@ typedef struct
 // Estrutura basica de comunicacao especifica para dados de ENERGIA
 typedef struct
 {
-  RTOS_Events_en  enEvent;  // Evento
-  uint16_t        *pwData;  // Ponteiro para os dados
-  uint16_t        wDataLen; // Quantidade de dados
+  uint32_t        Data; 
 } EnergyQueueData_st;
 
 /***************************************************************************************************
@@ -137,6 +136,6 @@ typedef struct
 ***************************************************************************************************/
 QueueHandle_t *RTOS_Get_Queue_Idx (RTOS_QueueIdx_en QueueIDX);
 bool RTOS_Send_Data_To_Specific_Queue(xQueueHandle* posQueHandle, GenericQueueData_st* pstEvt, portTickType xTicksToWait);
-bool RTOS_Send_Data_To_Energy_Queue(xQueueHandle* posQueHandle, EnergyQueueData_st* pstEvt, portTickType xTicksToWait);
+bool RTOS_Send_Data_To_Energy_Queue(uint32_t* data, portTickType xTicksToWait);
 
 #endif

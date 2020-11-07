@@ -21,11 +21,12 @@
 ***************************************************************************************************/
 #define MAX_RETRIES 10
 #define ATM_RTOS_DEFAULT_DELAYS	RTOS_DELAY_MS(20)
-#define SIMULA_DADOS_ENERGIA 1
+#define SIMULA_DADOS_ENERGIA 0
+#define MAX_MEDIDAS_ASSINADAS 10
 
-#define zAssert(func)  	 	 			\
-    		{                  			\
-    		  int _err = func; 		  \
+#define zAssert(func)  	 	 		\
+    		{                  		\
+    		  int _err = func; 		\
     		  if (!_err) { break; } \
     		}												
 
@@ -84,6 +85,51 @@ typedef struct
   	atm_op_mode_en  	Mode;
 	uint16_t	      	Retry;
 }ATM90_app_st;
+
+// Must always start from 1
+typedef enum
+{
+	voltage_rms_a = 1,
+	current_rms_a,
+	active_power_a,
+	reactive_power_a,
+	aparent_power_a,
+	active_fundamental_power_a,
+	active_harmonic_power_a,
+	voltage_thd_a,
+	current_thd_a,
+
+	voltage_rms_b,
+	current_rms_b,
+	active_power_b,
+	reactive_power_b,
+	aparent_power_b,
+	active_fundamental_power_b,
+	active_harmonic_power_b,
+	voltage_thd_b,
+	current_thd_b,
+
+	voltage_rms_c,
+	current_rms_c,
+	active_power_c,
+	reactive_power_c,
+	aparent_power_c,
+	active_fundamental_power_c,
+	active_harmonic_power_c,
+	voltage_thd_c,
+	current_thd_c,
+
+	frequency,
+
+	num_of_total_available_measures,
+}measurements_id_en;
+
+typedef struct
+{
+	measurements_id_en 	id;
+	bool				(*read_func)(uint16_t *val);
+}assinatura_de_medidas_st;
+
 
 /***************************************************************************************************
 * Prototypes

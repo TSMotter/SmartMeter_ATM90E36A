@@ -38,9 +38,12 @@ static uint8_t                byIndiceMsg = 0;
 static bool                   bSalvandoMensagem = false;
 static ReceiveCommand_st      UARTStructure = {0};
 
-
+char print_buffer_uart_queue[40] = {0}, reg_value_in_char_uart_queue[5] = {0};
+char print_buffer_energy_queue[10] = {0};
+  
 static SemaphoreHandle_t 	xSemaphoreEOF;
 static QueueHandle_t 		  *Queue_UART_HANDLE = NULL;
+static QueueHandle_t      *Queue_ENERGY_HANDLE = NULL;
 static RINGBUFF_T         rbUart;
 static uint8_t            byRingBuffer[RB_Size] = {0};
 
@@ -56,8 +59,14 @@ bool UART_api_init(void)
   {
     return false;
   }  
-  vQueueAddToRegistry(*Queue_UART_HANDLE, "Fila_UART");
 
+  // Initialize Energy queue
+  Queue_ENERGY_HANDLE = RTOS_Get_Queue_Idx(QueueIDX_ENERGY);
+  *Queue_ENERGY_HANDLE = xQueueCreate(128, sizeof(uint32_t));
+  if(Queue_ENERGY_HANDLE == NULL)
+  {
+    return false;
+  } 
 
   // Initialize ring buffer
   RingBuffer_Init(&rbUart, byRingBuffer, sizeof(uint8_t), RB_Size);
@@ -68,6 +77,7 @@ bool UART_api_init(void)
 
   UART.Rb = &rbUart;
   UART.Queue = *Queue_UART_HANDLE;
+  UART.EnergyQueue = *Queue_ENERGY_HANDLE;
   UART.SemEOF = xSemaphoreEOF;
   UART.huart = &huart3;
 
@@ -164,14 +174,17 @@ static void Command_Parse(char *pbyBuffer)
   UARTStructure.ID = strtoul(str_id, NULL, 16);
   UARTStructure.SubID = strtoul(str_sub_id, NULL, 16);
   UARTStructure.DataLen = strtoul(str_data_len, NULL, 16);
-  uint8_t LocalData[50] = {0};
-  for(uint16_t k = 0; k < UARTStructure.DataLen; k++)
+  // Quando SubID = 5 eu uso o DataLen como dado "cru", e nao como data len mesmo
+  if(UARTStructure.SubID != 5)
   {
-    char aa[3] = {str_data[2*k], str_data[(2*k)+1], '\0'};
-    LocalData[k] = strtoul(aa, NULL, 16);    
-  } 
-  memcpy(UARTStructure.Data, LocalData, UARTStructure.DataLen);
-  
+    uint8_t LocalData[50] = {0};
+    for(uint16_t k = 0; k < UARTStructure.DataLen; k++)
+    {
+      char aa[3] = {str_data[2*k], str_data[(2*k)+1], '\0'};
+      LocalData[k] = strtoul(aa, NULL, 16);    
+    } 
+    memcpy(UARTStructure.Data, LocalData, UARTStructure.DataLen);
+  }
   // - Formata a resposta
   
   // - Envia resposta
@@ -248,9 +261,6 @@ void UART_check_queue(void)
     return;
   }
 
-  char *DataToPrint = NULL;
-  char reg_value_in_char[5] = {'\0', '\0', '\0', '\0', '\0'};
-
   /* Verifica qual evento foi recebido */
   switch (NewEvent.enEvent)
   {
@@ -259,38 +269,26 @@ void UART_check_queue(void)
       {
         //----------------------------------------------------------
         case Cmd_PrintThis:
-          DataToPrint = malloc(40*sizeof(char));
-          if(DataToPrint == NULL)
-          {
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_MALLOC, strlen(MSG_ERRO_MALLOC));
-            return;
-          }
+          osDelay(10);
+          GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char_uart_queue);
           if(NewEvent.bySubCmd == 0)
           {
-            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
-            sprintf(DataToPrint, MSG_PRINT_THIS, reg_value_in_char);
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
-
+            sprintf(print_buffer_uart_queue, MSG_PRINT_THIS, reg_value_in_char_uart_queue);
           }
           else if(NewEvent.bySubCmd == 1)
           {
-            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
-            sprintf(DataToPrint, MSG_ERRO_WARN, reg_value_in_char);
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
+            sprintf(print_buffer_uart_queue, MSG_ERRO_WARN, reg_value_in_char_uart_queue);
           }
           else if(NewEvent.bySubCmd == 2)
           {
-            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
-            sprintf(DataToPrint, MSG_ERRO_IRQ0, reg_value_in_char);            
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
+            sprintf(print_buffer_uart_queue, MSG_ERRO_IRQ0, reg_value_in_char_uart_queue);            
           }
           else if(NewEvent.bySubCmd == 3)
-          {
-            GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char);
-            sprintf(DataToPrint, MSG_ERRO_IRQ1, reg_value_in_char);            
-            HAL_UART_Transmit_IT(UART.huart, (uint8_t*)DataToPrint, strlen(DataToPrint));
-          }          
-          free(DataToPrint);
+          { 
+            sprintf(print_buffer_uart_queue, MSG_ERRO_IRQ1, reg_value_in_char_uart_queue);            
+          }
+          HAL_UART_Transmit(UART.huart, (uint8_t*)print_buffer_uart_queue, strlen(print_buffer_uart_queue), 1000);
+          memset(print_buffer_uart_queue, 0, 40);
         break;
 
         //----------------------------------------------------------
@@ -304,6 +302,24 @@ void UART_check_queue(void)
   } // switch enEvent
 }
 
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+void UART_check_EnergyQueue(void)
+{
+  uint32_t hex_data;
+  // Verifica se ha eventos para tratar
+  if (xQueueReceive(UART.EnergyQueue, &hex_data, UART_RTOS_DEFAULT_DELAYS) != pdPASS)
+  {
+    return;
+  }
+  //osDelay(10);
+
+  GM_U32_TO_8ASCIIS(hex_data, print_buffer_energy_queue);
+  strcat(print_buffer_energy_queue, ",");
+  HAL_UART_Transmit(UART.huart, (uint8_t*)print_buffer_energy_queue, 9, 1000);
+  memset(print_buffer_energy_queue, 0, 10);
+}
 
 /*
  * Exemplo:
