@@ -80,9 +80,9 @@ typedef struct
 	atm_drv_st	    Drv;
 
 	uint16_t			MeasuresBitMap;
-	QueueHandle_t		Queue;
+	QueueHandle_t			Queue;
 	atm_states_st	  	State;
-  	atm_op_mode_en  	Mode;
+  atm_op_mode_en  	Mode;
 	uint16_t	      	Retry;
 }ATM90_app_st;
 
@@ -134,16 +134,16 @@ typedef struct
 /***************************************************************************************************
 * Prototypes
 ***************************************************************************************************/
-bool 	ATM_api_init				(void);
-void 	ATM_api_change_state		(atm_states_en next_state);
-void 	ATM_api_check_retry			(void);
-void 	ATM_api_check_hw_pins		(void);
-void 	ATM_api_check_queue			(void);
+bool 	ATM_api_init							(void);
+void 	ATM_api_change_state			(atm_states_en next_state);
+void 	ATM_api_check_retry				(void);
+void 	ATM_api_check_hw_pins			(void);
+void 	ATM_api_check_queue				(void);
 void 	ATM_api_periodic_checks		(void);
 
 void 	ATM_machine_suspended_mode	(void);
-void 	ATM_machine_config_mode		(void);
-void 	ATM_machine_calib_mode		(void);
+void 	ATM_machine_config_mode			(void);
+void 	ATM_machine_calib_mode			(void);
 void 	ATM_machine_operation_mode	(void);
 
 #endif

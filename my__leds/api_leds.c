@@ -57,7 +57,6 @@ bool LEDS_api_init(void)
   {
     return false;
   }
-  vQueueAddToRegistry (*Queue_LEDS_HANDLE, "Fila_LEDS");
 
   LEDS_hw_init();
 

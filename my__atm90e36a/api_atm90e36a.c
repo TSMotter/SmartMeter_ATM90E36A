@@ -83,9 +83,6 @@ bool ATM_api_init(void)
 
   ATM_drv_init(&ATM.Drv);
 
-	vQueueAddToRegistry(*Queue_ATM_HANDLE, "Fila_ATM");
-  
-
   ATM.State.Current = AtmState_Suspended;
   ATM.Mode = SuspendedMode;
   ATM.Queue = *Queue_ATM_HANDLE;

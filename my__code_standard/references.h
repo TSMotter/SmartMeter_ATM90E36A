@@ -5,8 +5,10 @@ LEDS:
 	- Laranja	  PD13	GPIOD, GPIO_PIN_13
 	- Vermelho	PD14	GPIOD, GPIO_PIN_14
 	- Azul		  PD15	GPIOD, GPIO_PIN_15
+
 BOTAO:
 	- Botao		  PA0		GPIOA, GPIO_PIN_0
+
 Pinos ATM:
 	- SPI1
 		. MISO	  PA6		GPIOA, GPIO_PIN_6
@@ -28,6 +30,15 @@ Pinos UART:
 		. TX	    PD8		GPIOD, GPIO_PIN_8
 		. RX	    PD9		GPIOD, GPIO_PIN_9
 
+Pinos SX1278:
+	- SPI3
+		. MISO	  PC11		GPIOC, GPIO_PIN_11
+		. MOSI	  PC12		GPIOC, GPIO_PIN_12
+		. CLK	    PC10		GPIOC, GPIO_PIN_10
+		. CS	    PD0			GPIOD, GPIO_PIN_0
+	- Reset		  PD1			GPIOD, GPIO_PIN_1
+	- Dio0		  PD2			GPIOD, GPIO_PIN_2
+	
 ***************************************************************************************************
 
 HAL_GPIO_WritePin( ,GPIO_PIN_SET)
