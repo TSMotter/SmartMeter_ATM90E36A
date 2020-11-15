@@ -61,6 +61,12 @@
 //------------------------------------------------------------------------
 // Comando 1 (Comando generico para printar n bytes)
 #define Cmd_PrintThis 1
+#define subCmd_print_start_msg 0
+#define subCmd_print_this 1
+#define subCmd_print_warn 2
+#define subCmd_print_irq0 3
+#define subCmd_print_irq1 4
+
 // Comando 2
 #define Cmd_CheckSumERROR 2
 //------ sub commands ------

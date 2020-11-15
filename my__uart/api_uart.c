@@ -270,20 +270,25 @@ void UART_check_queue(void)
         //----------------------------------------------------------
         case Cmd_PrintThis:
           osDelay(10);
+          if(NewEvent.bySubCmd == subCmd_print_start_msg)
+          {
+            HAL_UART_Transmit(UART.huart, (uint8_t*)MSG_PRINT_STARTED, strlen(MSG_PRINT_STARTED), 1000);
+            break;
+          }
           GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char_uart_queue);
-          if(NewEvent.bySubCmd == 0)
+          if(NewEvent.bySubCmd == subCmd_print_this)
           {
             sprintf(print_buffer_uart_queue, MSG_PRINT_THIS, reg_value_in_char_uart_queue);
           }
-          else if(NewEvent.bySubCmd == 1)
+          else if(NewEvent.bySubCmd == subCmd_print_warn)
           {
             sprintf(print_buffer_uart_queue, MSG_ERRO_WARN, reg_value_in_char_uart_queue);
           }
-          else if(NewEvent.bySubCmd == 2)
+          else if(NewEvent.bySubCmd == subCmd_print_irq0)
           {
             sprintf(print_buffer_uart_queue, MSG_ERRO_IRQ0, reg_value_in_char_uart_queue);            
           }
-          else if(NewEvent.bySubCmd == 3)
+          else if(NewEvent.bySubCmd == subCmd_print_irq1)
           { 
             sprintf(print_buffer_uart_queue, MSG_ERRO_IRQ1, reg_value_in_char_uart_queue);            
           }

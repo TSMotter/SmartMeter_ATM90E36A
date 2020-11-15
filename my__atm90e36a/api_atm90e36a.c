@@ -123,7 +123,7 @@ void ATM_api_check_hw_pins(void)
     flag = true;
     if(ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data) == ATM_RC_OK)
     {
-      send_event_to_uart(Cmd_PrintThis, 1, data);
+      send_event_to_uart(Cmd_PrintThis, subCmd_print_warn, data);
     }
   }
   else if(ATM.Drv.monitor_irq0())
@@ -131,7 +131,7 @@ void ATM_api_check_hw_pins(void)
     flag = true;
     if(ATM.Drv.read_reg(ATM_REG_SysStatus0_Add, &data) == ATM_RC_OK)
     {
-      send_event_to_uart(Cmd_PrintThis, 2, data);
+      send_event_to_uart(Cmd_PrintThis, subCmd_print_irq0, data);
     }
   }
   else if(ATM.Drv.monitor_irq1())
@@ -139,7 +139,7 @@ void ATM_api_check_hw_pins(void)
     flag = true;
     if(ATM.Drv.read_reg(ATM_REG_SysStatus1_Add, &data) == ATM_RC_OK)
     {
-      send_event_to_uart(Cmd_PrintThis, 3, data);
+      send_event_to_uart(Cmd_PrintThis, subCmd_print_irq1, data);
     }
   }  
   if(flag)
@@ -414,7 +414,8 @@ void ATM_machine_suspended_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(send_event_to_leds(Cmd_BlinkPattern1, 800), AtmState_Stall);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern1, 800), 0);
+      walk1_machine(send_event_to_uart(Cmd_PrintThis, subCmd_print_start_msg, 0), AtmState_Stall);
     break;
     //----------------------------------------------
     case AtmState_Stall:
@@ -428,7 +429,7 @@ void ATM_machine_suspended_mode(void)
 
       if(ATM.Drv.read_reg((uint8_t)ATM.MeasuresBitMap, &LocalReadVal) == ATM_RC_OK)
       {
-        walk1_machine(send_event_to_uart(Cmd_PrintThis, 0, LocalReadVal), AtmState_Stall);
+        walk1_machine(send_event_to_uart(Cmd_PrintThis, subCmd_print_this, LocalReadVal), AtmState_Stall);
       }
     }
     break;    

@@ -21,6 +21,7 @@
 #define RB_Size 128 	// (in bytes)
 #define UART_RTOS_DEFAULT_DELAYS 0
 
+#define MSG_PRINT_STARTED (char*)"Meter Started...\n"
 #define MSG_PRINT_THIS    (char*)"Meter -> Print: %s \n"
 #define MSG_ERRO_WARN	    (char*)"Meter -> Pino WARN: %s \n"
 #define MSG_ERRO_IRQ0	    (char*)"Meter -> Pino IRQ0: %s \n"
