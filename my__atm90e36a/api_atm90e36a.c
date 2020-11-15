@@ -30,29 +30,26 @@ static bool assina_medidas  (uint8_t *data, uint16_t len);
 static bool realiza_medidas (void);
 
 static bool Acquire_Va      (uint16_t *read_val); 	
-//static bool Acquire_Vb      (uint16_t *read_val); 	
-//static bool Acquire_Vc      (uint16_t *read_val); 	
+static bool Acquire_Vb      (uint16_t *read_val); 	
+static bool Acquire_Vc      (uint16_t *read_val); 	
 static bool Acquire_Ia      (uint16_t *read_val); 	
-//static bool Acquire_Ib      (uint16_t *read_val); 	
-//static bool Acquire_Ic      (uint16_t *read_val); 	
+static bool Acquire_Ib      (uint16_t *read_val); 	
+static bool Acquire_Ic      (uint16_t *read_val); 	
 static bool Acquire_Pa      (uint16_t *read_val); 	
-//static bool Acquire_Pb      (uint16_t *read_val); 	
-//static bool Acquire_Pc      (uint16_t *read_val); 	
+static bool Acquire_Pb      (uint16_t *read_val); 	
+static bool Acquire_Pc      (uint16_t *read_val); 	
 static bool Acquire_Qa      (uint16_t *read_val); 	
-//static bool Acquire_Qb      (uint16_t *read_val); 	
-//static bool Acquire_Qc      (uint16_t *read_val); 	
+static bool Acquire_Qb      (uint16_t *read_val); 	
+static bool Acquire_Qc      (uint16_t *read_val); 	
 static bool Acquire_Sa      (uint16_t *read_val); 	
-//static bool Acquire_Sb      (uint16_t *read_val); 	
-//static bool Acquire_Sc      (uint16_t *read_val); 	
-//static bool Acquire_PFa     (uint16_t *read_val); 	 
-//static bool Acquire_PFb     (uint16_t *read_val); 	 
-//static bool Acquire_PFc     (uint16_t *read_val); 	 
+static bool Acquire_Sb      (uint16_t *read_val); 	
+static bool Acquire_Sc      (uint16_t *read_val);  	 
 static bool Acquire_Pa_fund (uint16_t *read_val);
-//static bool Acquire_Pb_fund (uint16_t *read_val);
-//static bool Acquire_Pc_fund (uint16_t *read_val);
+static bool Acquire_Pb_fund (uint16_t *read_val);
+static bool Acquire_Pc_fund (uint16_t *read_val);
 static bool Acquire_Pa_harm (uint16_t *read_val);
-//static bool Acquire_Pb_harm (uint16_t *read_val);
-//static bool Acquire_Pc_harm (uint16_t *read_val);
+static bool Acquire_Pb_harm (uint16_t *read_val);
+static bool Acquire_Pc_harm (uint16_t *read_val);
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
@@ -611,22 +608,16 @@ void ATM_machine_operation_mode(void)
 ***************************************************************************************************/
 static bool assina_medidas(uint8_t *data, uint16_t len)
 {
-  // Versao dummy, apenas para botar pra funcionar
-  for(uint8_t k = 0; k < 7; k++)
-  {
-    vetor_medidas_assinadas[k].id = (k+1);
-  }
 
-  uint16_t idx = 0;
+  vetor_medidas_assinadas[0].id = voltage_rms_a;
+  vetor_medidas_assinadas[0].read_func = Acquire_Va;
+  vetor_medidas_assinadas[1].id = voltage_rms_b;
+  vetor_medidas_assinadas[1].read_func = Acquire_Vb;
+  vetor_medidas_assinadas[2].id = voltage_rms_c;
+  vetor_medidas_assinadas[2].read_func = Acquire_Vc;
+  vetor_medidas_assinadas[3].id = current_rms_a;      
+  vetor_medidas_assinadas[3].read_func = Acquire_Ia;
 
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Va;
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Ia;
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Pa;
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Qa;
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Sa;
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Pa_fund;
-  vetor_medidas_assinadas[idx++].read_func = Acquire_Pa_harm;
- 
   return true;
 }
 
@@ -670,6 +661,8 @@ static bool realiza_medidas(void)
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 
 /***************************************************************************************************
 * @brief 
@@ -687,14 +680,14 @@ static bool Acquire_Va(uint16_t *read_val)
 {
   return atm_acquire_line_voltage(PHASE_A, read_val);
 }
-//static bool Acquire_Vb(uint16_t *read_val)
-//{
-//  return atm_acquire_line_voltage(PHASE_B, read_val);
-//}
-//static bool Acquire_Vc(uint16_t *read_val)
-//{
-//  return atm_acquire_line_voltage(PHASE_C, read_val);
-//}
+static bool Acquire_Vb(uint16_t *read_val)
+{
+  return atm_acquire_line_voltage(PHASE_B, read_val);
+}
+static bool Acquire_Vc(uint16_t *read_val)
+{
+  return atm_acquire_line_voltage(PHASE_C, read_val);
+}
 
 /***************************************************************************************************
 * @brief 
@@ -712,14 +705,14 @@ static bool Acquire_Ia(uint16_t *read_val)
 {
   return atm_acquire_line_current(PHASE_A, read_val);
 }
-//static bool Acquire_Ib(uint16_t *read_val)
-//{
-//  return atm_acquire_line_current(PHASE_B, read_val);
-//}
-//static bool Acquire_Ic(uint16_t *read_val)
-//{
-//  return atm_acquire_line_current(PHASE_C, read_val);
-//}
+static bool Acquire_Ib(uint16_t *read_val)
+{
+  return atm_acquire_line_current(PHASE_B, read_val);
+}
+static bool Acquire_Ic(uint16_t *read_val)
+{
+  return atm_acquire_line_current(PHASE_C, read_val);
+}
 
 /***************************************************************************************************
 * @brief 
@@ -737,14 +730,14 @@ static bool Acquire_Pa(uint16_t *read_val)
 {
   return atm_acquire_active_power(PHASE_A, read_val);
 }
-//static bool Acquire_Pb(uint16_t *read_val)
-//{
-//  return atm_acquire_active_power(PHASE_B, read_val);
-//}
-//static bool Acquire_Pc(uint16_t *read_val)
-//{
-//  return atm_acquire_active_power(PHASE_C, read_val);
-//}
+static bool Acquire_Pb(uint16_t *read_val)
+{
+  return atm_acquire_active_power(PHASE_B, read_val);
+}
+static bool Acquire_Pc(uint16_t *read_val)
+{
+  return atm_acquire_active_power(PHASE_C, read_val);
+}
 
 /***************************************************************************************************
 * @brief 
@@ -762,14 +755,14 @@ static bool Acquire_Qa(uint16_t *read_val)
 {
   return atm_acquire_reactive_power(PHASE_A, read_val);
 }
-//static bool Acquire_Qb(uint16_t *read_val)
-//{
-//  return atm_acquire_reactive_power(PHASE_B, read_val);
-//}
-//static bool Acquire_Qc(uint16_t *read_val)
-//{
-//  return atm_acquire_reactive_power(PHASE_C, read_val);
-//}
+static bool Acquire_Qb(uint16_t *read_val)
+{
+  return atm_acquire_reactive_power(PHASE_B, read_val);
+}
+static bool Acquire_Qc(uint16_t *read_val)
+{
+  return atm_acquire_reactive_power(PHASE_C, read_val);
+}
 
 /***************************************************************************************************
 * @brief 
@@ -787,14 +780,14 @@ static bool Acquire_Sa(uint16_t *read_val)
 {
   return atm_acquire_aparent_power(PHASE_A, read_val);
 }
-//static bool Acquire_Sb(uint16_t *read_val)
-//{
-//  return atm_acquire_aparent_power(PHASE_B, read_val);
-//}
-//static bool Acquire_Sc(uint16_t *read_val)
-//{
-//  return atm_acquire_aparent_power(PHASE_C, read_val);
-//}
+static bool Acquire_Sb(uint16_t *read_val)
+{
+  return atm_acquire_aparent_power(PHASE_B, read_val);
+}
+static bool Acquire_Sc(uint16_t *read_val)
+{
+  return atm_acquire_aparent_power(PHASE_C, read_val);
+}
 
 /***************************************************************************************************
 * @brief 
@@ -824,14 +817,14 @@ static bool Acquire_Pa_fund(uint16_t *read_val)
 {
   return atm_acquire_active_fundamental_power(PHASE_A, read_val);
 }
-//static bool Acquire_Pb_fund(uint16_t *read_val)
-//{
-//  return atm_acquire_active_fundamental_power(PHASE_B, read_val);
-//}
-//static bool Acquire_Pc_fund(uint16_t *read_val)
-//{
-//  return atm_acquire_active_fundamental_power(PHASE_C, read_val);
-//}
+static bool Acquire_Pb_fund(uint16_t *read_val)
+{
+  return atm_acquire_active_fundamental_power(PHASE_B, read_val);
+}
+static bool Acquire_Pc_fund(uint16_t *read_val)
+{
+  return atm_acquire_active_fundamental_power(PHASE_C, read_val);
+}
 
 /***************************************************************************************************
 * @brief 
@@ -849,11 +842,12 @@ static bool Acquire_Pa_harm(uint16_t *read_val)
 {
   return atm_acquire_active_harmonic_power(PHASE_A, read_val);
 }
-//static bool Acquire_Pb_harm(uint16_t *read_val)
-//{
-//  return atm_acquire_active_harmonic_power(PHASE_B, read_val);
-//}
-//static bool Acquire_Pc_harm(uint16_t *read_val)
-//{
-//  return atm_acquire_active_harmonic_power(PHASE_C, read_val);
-//}
+static bool Acquire_Pb_harm(uint16_t *read_val)
+{
+  return atm_acquire_active_harmonic_power(PHASE_B, read_val);
+}
+static bool Acquire_Pc_harm(uint16_t *read_val)
+{
+  return atm_acquire_active_harmonic_power(PHASE_C, read_val);
+}
+#pragma GCC diagnostic pop

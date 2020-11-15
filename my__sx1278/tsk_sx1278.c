@@ -29,11 +29,12 @@ void start_sx1278_task(void const * argument)
 {
   SX_api_init();
   
-  SX_config();
+  SX_config(434000000, SX1278_POWER_17DBM, SX1278_LORA_SF_7,
+	SX1278_LORA_BW_125KHZ, SX1278_LORA_CR_4_5, SX1278_LORA_CRC_EN, 10);
 
   for(;;)
   {
-    osDelay(1);
+    osDelay(100);
   }
 
 }
