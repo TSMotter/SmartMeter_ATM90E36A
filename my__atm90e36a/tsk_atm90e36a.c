@@ -56,7 +56,7 @@ void start_atm90e36a_task(void const * argument)
   // Modes of operation are solely changed through Serial commands
   for(;;)
   {
-    ATM_api_periodic_checks();
+    
     
     /***************************************************************************************************
     * Suspended
@@ -89,5 +89,7 @@ void start_atm90e36a_task(void const * argument)
     {
       ATM_machine_operation_mode();
     }
+
+    ATM_api_periodic_checks();
   }
 }

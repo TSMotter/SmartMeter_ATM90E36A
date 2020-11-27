@@ -173,8 +173,30 @@ void ATM_api_check_queue(void)
         break;
         //----------------------------------------------
         case Cmd_CalibrationMode:
-          ATM.State.Current = AtmState_Suspended;
           ATM.Mode = CalibMode;
+          if (NewEvent.bySubCmd == subCmd_AdjStart)
+          {
+          	ATM.State.Previous = AtmState_CalibAdjStartReg;
+          	ATM.State.Current = AtmState_CalibAdjStartReg;
+          }
+          else if (NewEvent.bySubCmd == subCmd_OffSet_Va)
+          	ATM.State.Current = AtmState_CalibUoffsetAReg;
+          else if (NewEvent.bySubCmd == subCmd_Offset_Ia)
+          	ATM.State.Current = AtmState_CalibIoffsetAReg;
+          else if (NewEvent.bySubCmd == subCmd_Offset_Vb)
+          	ATM.State.Current = AtmState_CalibUoffsetBReg;
+          else if (NewEvent.bySubCmd == subCmd_Offset_Ib)
+          	ATM.State.Current = AtmState_CalibIoffsetBReg;
+          else if (NewEvent.bySubCmd == subCmd_Offset_Vc)
+          	ATM.State.Current = AtmState_CalibUoffsetCReg;
+          else if (NewEvent.bySubCmd == subCmd_Offset_Ic)
+          	ATM.State.Current = AtmState_CalibIoffsetCReg;
+          else if (NewEvent.bySubCmd == subCmd_Gain_all_phases_V)
+          	ATM.State.Current = AtmState_CalibGain_all_phases_V;
+          else if (NewEvent.bySubCmd == subCmd_Gain_all_phases_I)
+          	ATM.State.Current = AtmState_CalibGain_all_phases_I;
+          else if (NewEvent.bySubCmd == subCmd_Read_WriteCS3)
+          	ATM.State.Current = StateReadWrite_CS3;         
         break;
         //----------------------------------------------
         case Cmd_SuspendedMode:
@@ -332,8 +354,6 @@ static bool config_reg_CS(uint16_t reg)
       return true;  
     }
   }
-
-  ATM.Retry++;
   return false;  
 }
 
@@ -509,7 +529,8 @@ void ATM_machine_config_mode(void)
       zAssert(walk1_machine(config_reg_MMode0(), 0));
 
       // 4.5) MMode1
-      zAssert(walk1_machine(config_reg_MMode1(), 0));
+      // Default...
+      //zAssert(walk1_machine(config_reg_MMode1(), 0));
 
       // 4.6) P Start Th
       zAssert(walk3_machine(ATM_REG_PStartTh_Add, 0x0bb8, 0));
@@ -553,10 +574,10 @@ void ATM_machine_calib_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 500), AtmState_CalibInit);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 500), AtmState_CalibAdjStartReg);
     break;
     //----------------------------------------------
-    case AtmState_CalibInit:
+    case AtmState_CalibAdjStartReg:
 
     break;
     //----------------------------------------------
@@ -574,12 +595,17 @@ void ATM_machine_operation_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS1_Add), 0));
+      zAssert(walk3_machine(ATM_REG_CalStart, CS_REG_Value_Operation, 0));
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS3_Add), 0));
+      zAssert(walk3_machine(ATM_REG_AdjStart, CS_REG_Value_Operation, 0));
+      
       walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 200), AtmState_SubscribeMeasures);
     break;
 
     //----------------------------------------------
     case AtmState_SubscribeMeasures:
-    // inscreve variaveis no processo de leitura
+    // Inscreve variaveis no processo de leitura
     assina_medidas(NULL, 0);
 
     // Starta timer 
@@ -594,7 +620,10 @@ void ATM_machine_operation_mode(void)
     {
       if(xSemaphoreTake(SyncMeasureSem, ATM_RTOS_DEFAULT_DELAYS) == pdPASS)
       {
-        realiza_medidas();
+        if(realiza_medidas())
+        {
+          
+        }
       }
     }
     break;
@@ -639,8 +668,7 @@ static bool realiza_medidas(void)
       if(vetor_medidas_assinadas[k].id)
       {
         vetor_medidas_assinadas[k].read_func(&temp_read_val);
-        uint16_t temp = vetor_medidas_assinadas[k].id;
-        dado_de_envio = (uint32_t)(temp << 16);
+        dado_de_envio = (uint32_t)(vetor_medidas_assinadas[k].id << 16);
         dado_de_envio |= (uint32_t)(temp_read_val);
 
         // Envia evento para task UART
@@ -648,6 +676,8 @@ static bool realiza_medidas(void)
       }
     }
 
+    send_event_to_uart(Cmd_PrintThis, subCmd_print_line_feed, 0);
+    
     if(rc >= MAX_MEDIDAS_ASSINADAS)
     {
       return true;

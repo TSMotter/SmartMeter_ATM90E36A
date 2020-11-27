@@ -53,7 +53,16 @@ typedef enum
 	AtmState_ConfigCS0,
 
 	// States for Calibration Op. Mode:
-	AtmState_CalibInit,
+	AtmState_CalibAdjStartReg,
+	AtmState_CalibUoffsetAReg,
+	AtmState_CalibIoffsetAReg,
+	AtmState_CalibUoffsetBReg,
+	AtmState_CalibIoffsetBReg,
+	AtmState_CalibUoffsetCReg,
+	AtmState_CalibIoffsetCReg,
+	AtmState_CalibGain_all_phases_V,
+	AtmState_CalibGain_all_phases_I,
+	StateReadWrite_CS3,	
 				 
 	// States for Operation Op. Mode:
 	AtmState_SubscribeMeasures,

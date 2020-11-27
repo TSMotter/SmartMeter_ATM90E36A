@@ -243,7 +243,7 @@ bool UART_Envia_Eventos(void)
   }
   else if (UARTStructure.ID == 2)
   {
-    return send_event_to_atm(EvntFromUARTtoPCF, UARTStructure.SubID, UARTStructure.DataLen);
+    return true;
   }
   return false;
 }
@@ -275,6 +275,12 @@ void UART_check_queue(void)
             HAL_UART_Transmit(UART.huart, (uint8_t*)MSG_PRINT_STARTED, strlen(MSG_PRINT_STARTED), 1000);
             break;
           }
+          else if(NewEvent.bySubCmd == subCmd_print_line_feed)
+          {
+            HAL_UART_Transmit(UART.huart, (uint8_t*)MSG_LINE_FEED, strlen(MSG_LINE_FEED), 1000);
+            break;            
+          }
+
           GM_U16_TO_4ASCIIS(NewEvent.wDataLen, reg_value_in_char_uart_queue);
           if(NewEvent.bySubCmd == subCmd_print_this)
           {

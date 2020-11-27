@@ -25,67 +25,66 @@
 //------------------------------------------------------------------------
 // LISTA DE COMANDOS UART -> ATM
 //------------------------------------------------------------------------
-// Comando 1
-#define Cmd_ConfigMode 1
-// Comando 2
-#define Cmd_CalibrationMode 2
-//------ sub commands ------
-#define subCmd_AdjStart  0
-#define subCmd_OffSet_Va 1
-#define subCmd_Offset_Ia 2
-#define subCmd_Offset_Vb 3
-#define subCmd_Offset_Ib 4
-#define subCmd_Offset_Vc 5
-#define subCmd_Offset_Ic 6
-#define subCmd_Gain_all_phases_V 7
-#define subCmd_Gain_all_phases_I 8
-#define subCmd_Read_WriteCS3 9
-// Comando 3
-#define Cmd_OperationMode 3
-// Comando 4
-#define Cmd_SuspendedMode 4
-// Comando 5
-#define Cmd_ReadSpecificRegister 5
-//------ sub commands ------
-// eg: reg 0x6A --> subCmd = 106
-// Comando 6
-#define Cmd_Reset 6
-//------ sub commands ------
-#define subCmd_SoftwareReset 1
-#define subCmd_HardwareReset 2
+// Comandos
+enum
+{
+  Cmd_ConfigMode = 1,
+  Cmd_CalibrationMode, 
+  Cmd_OperationMode,
+  Cmd_SuspendedMode,
+  Cmd_ReadSpecificRegister,
+  Cmd_Reset,
+  Cmd_SignMeasurements,
+};
 
-#define Cmd_SignMeasurements 7
+// Sub comandos
+enum
+{
+  subCmd_AdjStart = 1,
+  subCmd_OffSet_Va,
+  subCmd_Offset_Ia,
+  subCmd_Offset_Vb,
+  subCmd_Offset_Ib,
+  subCmd_Offset_Vc,
+  subCmd_Offset_Ic,
+  subCmd_Gain_all_phases_V,
+  subCmd_Gain_all_phases_I,
+  subCmd_Read_WriteCS3,
+
+  subCmd_SoftwareReset,
+  subCmd_HardwareReset,
+};
 
 //------------------------------------------------------------------------
 // LISTA DE COMANDOS ATM -> UART
 //------------------------------------------------------------------------
-// Comando 1 (Comando generico para printar n bytes)
-#define Cmd_PrintThis 1
-#define subCmd_print_start_msg 0
-#define subCmd_print_this 1
-#define subCmd_print_warn 2
-#define subCmd_print_irq0 3
-#define subCmd_print_irq1 4
+// Comandos
+enum
+{
+  Cmd_PrintThis = 1,
+};
 
-// Comando 2
-#define Cmd_CheckSumERROR 2
-//------ sub commands ------
-#define subCmd_CS0 0x40 // mascaras para os bits do reg. SysStatus0, rodado.
-#define subCmd_CS1 0x10 // (assumindo que so possa ter 1 CS errado por vez)
-#define subCmd_CS2 0x04
-#define subCmd_CS3 0x01
+// Sub comandos
+enum
+{
+  subCmd_print_start_msg = 0,
+  subCmd_print_this,
+  subCmd_print_warn,
+  subCmd_print_irq0,
+  subCmd_print_irq1,
+  subCmd_print_line_feed,
+};
 
 //------------------------------------------------------------------------
 // LISTA DE COMANDOS ATM -> LEDS
 //------------------------------------------------------------------------
-#define Cmd_BlinkPattern1	1
-#define Cmd_BlinkPattern2	2
-#define Cmd_BlinkPattern3 3
-//#define Cmd_Blink	2
-//#define Cmd_Blink 3
-//#define Cmd_Blink 4
-//#define Cmd_Blink	5
-
+// Comandos
+enum
+{
+  Cmd_BlinkPattern1 = 1,
+  Cmd_BlinkPattern2,
+  Cmd_BlinkPattern3,
+};
 
 /***************************************************************************************************
 * Types

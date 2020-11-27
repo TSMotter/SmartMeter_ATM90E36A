@@ -295,7 +295,7 @@ typedef enum
 #define		ATM_REG_PhiB          	0x4A
 #define		ATM_REG_GainC         	0x4B
 #define		ATM_REG_PhiC          	0x4C
-#define		ATM_REG_CS1           	0x4D
+#define		ATM_REG_CS1_Add           	0x4D
 #define		ATM_REG_HarmStart		    0x50 // Fundamental/ Harmonic Energy Calibration registers
 #define		ATM_REG_POffsetAF     	0x51
 #define		ATM_REG_POffsetBF     	0x52
@@ -303,7 +303,7 @@ typedef enum
 #define		ATM_REG_PGainAF       	0x54
 #define		ATM_REG_PGainBF       	0x55
 #define		ATM_REG_PGainCF       	0x56
-#define		ATM_REG_CS2           	0x57
+#define		ATM_REG_CS2_Add           	0x57
 #define		ATM_REG_AdjStart		    0x60 // Measurement Calibration
 #define		ATM_REG_UgainA         	0x61
 #define		ATM_REG_IgainA         	0x62
@@ -319,7 +319,7 @@ typedef enum
 #define		ATM_REG_IoffsetC       	0x6C
 #define		ATM_REG_IgainN         	0x6D
 #define		ATM_REG_IoffsetN       	0x6E
-#define		ATM_REG_CS3            	0x6F
+#define		ATM_REG_CS3_Add            	0x6F
 #define		ATM_REG_APenergyT		    0x80 // Energy Register
 #define		ATM_REG_APenergyA       0x81
 #define		ATM_REG_APenergyB       0x82
