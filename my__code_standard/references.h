@@ -51,13 +51,15 @@ HAL_GPIO_TogglePin()
 
 Protocolo UART:
 
-	$ID,SUBID,DATALEN,DATA,CRC*
-	|| ||    ||      ||   ||  |_ end of frame [0x2a]
-	|| ||    ||      ||   ||_ crc 16-CCITT 0xFFFF no formato %04x 
-	|| ||    ||      ||   |_ separador [0x2c]
-	|| ||    ||      ||_ dado em ascii
-	|| ||    ||      |_ separador [0x2c]
-	|| ||    ||_ quantidade de dados no campo dado no formato %02x
+	$ID,SUBID,COMANDO,DATALEN,DATA,CRC*
+	|| ||    ||			 ||      ||   ||  |_ end of frame [0x2a]
+	|| ||    ||    	 ||      ||   ||_ crc 16-CCITT 0xFFFF no formato %04x 
+	|| ||    ||    	 ||      ||   |_ separador [0x2c]
+	|| ||    ||    	 ||      ||_ dado em ascii [max size == GM_Max_Command_Len]
+	|| ||    ||    	 ||      |_ separador [0x2c]
+	|| ||    ||    	 ||_ quantidade de dados no campo dado no formato %04x
+	|| ||    ||    	 |_ separador [0x2c]
+	|| ||    ||_ comando da msg no formato %04x
 	|| ||    |_ separador [0x2c]
 	|| ||_ sub id da msg no formato %02x
 	|| |_ separador [0x2c]

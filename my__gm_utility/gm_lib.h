@@ -25,6 +25,7 @@
 #define GM_SOF 		      0x24//'$' //0x24
 #define GM_EOF 		      0x2a//'*' //0x2a
 #define GM_Separador 	  0x2c//',' //0x2c
+#define GM_Max_Command_Len  50
 
 static const unsigned short CRC_CCITT_TABLE[256] =
 {

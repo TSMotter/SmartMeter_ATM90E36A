@@ -20,7 +20,7 @@ static void Insert_Byte_Buffer_Linear_Manager (uint8_t byByte);
 static void Insert_Byte_Buffer_Linear         (uint8_t byByte);
 static void Buffer_Clear                      (void);
 static void Command_Parse                     (char *pbyBuffer);
-static bool send_event_to_atm                 (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand);
+static bool send_event_to_atm                 (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
 /***************************************************************************************************
 * Externals
@@ -145,7 +145,7 @@ static void Buffer_Clear(void)
 ***************************************************************************************************/
 static void Command_Parse(char *pbyBuffer)
 {
-  //Ex: <$81,01,0001,058934A8B4,fedf*>
+  //Ex: <$81,01,,0005,3132333435,fed6*>
   uint16_t RemoteCRC = 0, LocalCRC = 0, sizeTotalCmd = 0;
 
   uint8_t localCpy[50] = {0};
@@ -154,7 +154,8 @@ static void Command_Parse(char *pbyBuffer)
 
   char* str_id   		  = &pbyBuffer[1];  //++ para comecar a pegar apos o SOF
   char* str_sub_id 	  = PARSER(str_sub_id,   str_id,       GM_Separador);
-  char* str_data_len 	= PARSER(str_data_len, str_sub_id,   GM_Separador);
+  char* str_comando   = PARSER(str_comando,  str_sub_id,    GM_Separador);
+  char* str_data_len 	= PARSER(str_data_len, str_comando,   GM_Separador);
   char* str_data    	= PARSER(str_data,     str_data_len, GM_Separador); 
   char* str_crc    	  = PARSER(str_crc,      str_data,     GM_Separador); 
 
@@ -173,11 +174,13 @@ static void Command_Parse(char *pbyBuffer)
   // - Preenche struct
   UARTStructure.ID = strtoul(str_id, NULL, 16);
   UARTStructure.SubID = strtoul(str_sub_id, NULL, 16);
+  UARTStructure.Comando = strtoul(str_comando, NULL, 16);
   UARTStructure.DataLen = strtoul(str_data_len, NULL, 16);
-  // Quando SubID = 5 eu uso o DataLen como dado "cru", e nao como data len mesmo
-  if(UARTStructure.SubID != 5)
+  
+  // When command is Cmd_WriteSpecificRegister, DataLen is used as raw data instead of actually data len
+  if(UARTStructure.DataLen && UARTStructure.SubID != Cmd_WriteSpecificRegister)
   {
-    uint8_t LocalData[50] = {0};
+    uint8_t LocalData[GM_Max_Command_Len] = {0};
     for(uint16_t k = 0; k < UARTStructure.DataLen; k++)
     {
       char aa[3] = {str_data[2*k], str_data[(2*k)+1], '\0'};
@@ -195,7 +198,7 @@ static void Command_Parse(char *pbyBuffer)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand)
+static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
 {
   xQueueHandle* posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_ATM);
 
@@ -204,7 +207,7 @@ static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t Su
   stEvent.byCmd     = Command;
   stEvent.bySubCmd  = SubCommand;
   stEvent.pbyData   = 0;
-  stEvent.wDataLen  = 0;
+  stEvent.wDataLen  = DataLen;
 
   return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, UART_RTOS_DEFAULT_DELAYS);
 }
@@ -239,7 +242,7 @@ bool UART_Envia_Eventos(void)
 {
   if (UARTStructure.ID == 1)
   {
-    return send_event_to_atm(EvntFromUARTtoATM, UARTStructure.SubID, UARTStructure.DataLen);
+    return send_event_to_atm(EvntFromUARTtoATM, UARTStructure.SubID, UARTStructure.Comando, UARTStructure.DataLen);
   }
   else if (UARTStructure.ID == 2)
   {

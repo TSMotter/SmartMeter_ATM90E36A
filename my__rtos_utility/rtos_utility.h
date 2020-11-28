@@ -33,11 +33,12 @@ enum
   Cmd_OperationMode,
   Cmd_SuspendedMode,
   Cmd_ReadSpecificRegister,
+  Cmd_WriteSpecificRegister,
   Cmd_Reset,
   Cmd_SignMeasurements,
 };
 
-// Sub comandos
+// Sub comandos para Cmd_CalibrationMode
 enum
 {
   subCmd_AdjStart = 1,
@@ -50,9 +51,13 @@ enum
   subCmd_Gain_all_phases_V,
   subCmd_Gain_all_phases_I,
   subCmd_Read_WriteCS3,
+};
 
-  subCmd_SoftwareReset,
-  subCmd_HardwareReset,
+// Sub comandos para Cmd_Reset
+enum
+{
+  subCmd_SoftwareReset = 1,
+  subCmd_HardwareReset,  
 };
 
 //------------------------------------------------------------------------

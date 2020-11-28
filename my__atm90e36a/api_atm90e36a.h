@@ -43,7 +43,9 @@ typedef enum
 	// States for Suspended Op. Mode:
 	AtmState_Suspended = 1,
 	AtmState_Stall,
+	AtmState_HardReset,
 	AtmState_ReadingReg,
+	AtmState_WritingReg,
 
 	// States for Configuration Op. Mode:
 	AtmState_SoftReset,
@@ -88,7 +90,6 @@ typedef struct
 {
 	atm_drv_st	    Drv;
 
-	uint16_t			MeasuresBitMap;
 	QueueHandle_t			Queue;
 	atm_states_st	  	State;
   atm_op_mode_en  	Mode;

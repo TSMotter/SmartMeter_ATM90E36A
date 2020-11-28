@@ -61,6 +61,10 @@ extern TIM_HandleTypeDef htim3;
 ATM90_app_st ATM = {0};
 static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 
+// Reg address and value to individually read/write through UART commands
+static uint16_t RegisterAddress = 0;
+static uint16_t RegisterVal = 0;    
+
 static assinatura_de_medidas_st vetor_medidas_assinadas[MAX_MEDIDAS_ASSINADAS] = {0};
 
 /***************************************************************************************************
@@ -173,6 +177,7 @@ void ATM_api_check_queue(void)
         break;
         //----------------------------------------------
         case Cmd_CalibrationMode:
+        {
           ATM.Mode = CalibMode;
           if (NewEvent.bySubCmd == subCmd_AdjStart)
           {
@@ -197,6 +202,7 @@ void ATM_api_check_queue(void)
           	ATM.State.Current = AtmState_CalibGain_all_phases_I;
           else if (NewEvent.bySubCmd == subCmd_Read_WriteCS3)
           	ATM.State.Current = StateReadWrite_CS3;         
+        }
         break;
         //----------------------------------------------
         case Cmd_SuspendedMode:
@@ -205,24 +211,41 @@ void ATM_api_check_queue(void)
         break;
         //----------------------------------------------
         case Cmd_OperationMode:
-          ATM.MeasuresBitMap = NewEvent.bySubCmd;
           ATM.State.Current = AtmState_Suspended;
           ATM.Mode = OperationMode;
         break;
         //----------------------------------------------
         case Cmd_ReadSpecificRegister:
-          ATM.MeasuresBitMap = NewEvent.bySubCmd;
+          RegisterAddress = NewEvent.bySubCmd;
           ATM.State.Current = AtmState_ReadingReg;
           ATM.Mode = SuspendedMode;
         break;
         //----------------------------------------------
-        case Cmd_SignMeasurements:
-          if(assina_medidas(NewEvent.pbyData, NewEvent.wDataLen))
+        case Cmd_WriteSpecificRegister:
+          RegisterAddress = NewEvent.bySubCmd;
+          RegisterVal = NewEvent.wDataLen;
+          ATM.State.Current = AtmState_WritingReg;
+          ATM.Mode = SuspendedMode;
+        break;        
+        //----------------------------------------------
+        case Cmd_Reset:
+        {
+          if(NewEvent.bySubCmd == subCmd_SoftwareReset)
           {
-            ATM.State.Current = AtmState_SubscribeMeasures;
-            ATM.Mode = OperationMode;
+            ATM.State.Current = AtmState_SoftReset;
+            ATM.Mode = SuspendedMode;
           }
-        break;         
+          else if (NewEvent.bySubCmd == subCmd_HardwareReset)
+          {
+            ATM.State.Current = AtmState_HardReset;
+            ATM.Mode = SuspendedMode;            
+          }
+        } 
+        break;
+        //----------------------------------------------
+        case Cmd_SignMeasurements:
+          // Not yet implemented
+        break;
         //----------------------------------------------
         default:
         break;    
@@ -443,16 +466,35 @@ void ATM_machine_suspended_mode(void)
       osDelay(10);
     break;
     //----------------------------------------------
+    case AtmState_SoftReset:
+      walk2_machine(ATM.Drv.soft_reset(), AtmState_Suspended);
+    break;
+    //----------------------------------------------
+    case AtmState_HardReset:
+      ATM.Drv.hard_reset();
+      ATM_api_change_state(AtmState_Suspended);
+    break;
+    //----------------------------------------------
     case AtmState_ReadingReg:
     {
       uint16_t LocalReadVal = 0;
 
-      if(ATM.Drv.read_reg((uint8_t)ATM.MeasuresBitMap, &LocalReadVal) == ATM_RC_OK)
+      if(ATM.Drv.read_reg((uint8_t)RegisterAddress, &LocalReadVal) == ATM_RC_OK)
       {
         walk1_machine(send_event_to_uart(Cmd_PrintThis, subCmd_print_this, LocalReadVal), AtmState_Stall);
       }
+      RegisterAddress = 0;
     }
-    break;    
+    break; 
+    //----------------------------------------------
+    case AtmState_WritingReg:
+    {
+      walk3_machine(RegisterAddress, RegisterVal, AtmState_Stall);
+
+      RegisterAddress = 0;
+      RegisterVal = 0;
+    }
+    break;       
     //----------------------------------------------
     default:
     break;

@@ -51,8 +51,9 @@ typedef struct
 {
   uint8_t   ID;
   uint8_t   SubID;
+  uint16_t  Comando;
   uint16_t  DataLen;
-  uint8_t   *Data;
+  uint8_t   Data[GM_Max_Command_Len];
   uint16_t  Crc;
 } ReceiveCommand_st;
 
