@@ -14,7 +14,6 @@
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
-static leds_periods_en map_to_leds_period(uint16_t periodo);
 
 /***************************************************************************************************
 * Externals
@@ -27,23 +26,6 @@ leds_drv_st LEDS = {0};
 
 // RTOS related variables
 QueueHandle_t *Queue_LEDS_HANDLE = NULL;
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static leds_periods_en map_to_leds_period(uint16_t periodo)
-{
-  if(periodo <= FAST_LED)
-  {
-    return FAST_LED;
-  }
-  else if ((periodo > FAST_LED) && (periodo <= MED_LED))
-  {
-    return MED_LED;
-  }
-
-  return SLOW_LED;
-}
 
 /***************************************************************************************************
 * @brief 
@@ -75,7 +57,6 @@ bool LEDS_api_init(void)
 void LEDS_check_queue (void)
 {
   GenericQueueData_st NewEvent;
-  leds_periods_en periodo;
 
   // Verifica se ha eventos para tratar
   if (xQueueReceive (*Queue_LEDS_HANDLE, &NewEvent, LEDS_RTOS_DEFAULT_DELAY) != pdPASS)
@@ -91,18 +72,15 @@ void LEDS_check_queue (void)
 	    {
         //----------------------------------------------
         case Cmd_BlinkPattern1:
-          periodo = map_to_leds_period(NewEvent.wDataLen);
-          LEDS_blink_pattern1(periodo);
+          LEDS_blink_pattern1(NewEvent.wDataLen);
         break;
         //----------------------------------------------
         case Cmd_BlinkPattern2:
-          periodo = map_to_leds_period(NewEvent.wDataLen);
-          LEDS_blink_pattern2(periodo);
+          LEDS_blink_pattern2(NewEvent.wDataLen);
         break;
         //----------------------------------------------
         case Cmd_BlinkPattern3:
-          periodo = map_to_leds_period(NewEvent.wDataLen);
-          LEDS_blink_pattern3(periodo);
+          LEDS_blink_pattern3(NewEvent.wDataLen);
         break;                
         //----------------------------------------------
         default:

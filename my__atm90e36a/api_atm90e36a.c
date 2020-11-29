@@ -457,7 +457,7 @@ void ATM_machine_suspended_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(send_event_to_leds(Cmd_BlinkPattern1, 800), 0);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern1, subCmd_BlinkSpeed_Slow), 0);
       walk1_machine(send_event_to_uart(Cmd_PrintThis, subCmd_print_start_msg, 0), AtmState_Stall);
     break;
     //----------------------------------------------
@@ -616,7 +616,7 @@ void ATM_machine_calib_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 500), AtmState_CalibAdjStartReg);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, subCmd_BlinkSpeed_Medium), AtmState_CalibAdjStartReg);
     break;
     //----------------------------------------------
     case AtmState_CalibAdjStartReg:
@@ -642,7 +642,7 @@ void ATM_machine_operation_mode(void)
       zAssert(walk1_machine(config_reg_CS(ATM_REG_CS3_Add), 0));
       zAssert(walk3_machine(ATM_REG_AdjStart, CS_REG_Value_Operation, 0));
       
-      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, 200), AtmState_SubscribeMeasures);
+      walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, subCmd_BlinkSpeed_Fast), AtmState_SubscribeMeasures);
     break;
 
     //----------------------------------------------
