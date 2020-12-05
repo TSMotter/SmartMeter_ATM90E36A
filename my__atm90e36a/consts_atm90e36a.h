@@ -282,7 +282,7 @@ typedef enum
 #define 	ATM_REG_QPhaseTh_Add 		    0x39
 #define 	ATM_REG_SPhaseTh_Add 		    0x3A
 #define 	ATM_REG_CS0_Add 	 		      0x3B
-#define		ATM_REG_CalStart		    0x40 // Calibration Registers
+#define		ATM_REG_CalStart_Add		    0x40 // Calibration Registers
 #define		ATM_REG_PoffsetA      	0x41
 #define		ATM_REG_QoffsetA      	0x42
 #define		ATM_REG_POffsetB      	0x43
@@ -296,7 +296,7 @@ typedef enum
 #define		ATM_REG_GainC         	0x4B
 #define		ATM_REG_PhiC          	0x4C
 #define		ATM_REG_CS1_Add           	0x4D
-#define		ATM_REG_HarmStart		    0x50 // Fundamental/ Harmonic Energy Calibration registers
+#define		ATM_REG_HarmStart_Add		    0x50 // Fundamental/ Harmonic Energy Calibration registers
 #define		ATM_REG_POffsetAF     	0x51
 #define		ATM_REG_POffsetBF     	0x52
 #define		ATM_REG_POffsetCF     	0x53
@@ -304,19 +304,19 @@ typedef enum
 #define		ATM_REG_PGainBF       	0x55
 #define		ATM_REG_PGainCF       	0x56
 #define		ATM_REG_CS2_Add           	0x57
-#define		ATM_REG_AdjStart		    0x60 // Measurement Calibration
+#define		ATM_REG_AdjStart_Add		    0x60 // Measurement Calibration
 #define		ATM_REG_UgainA         	0x61
 #define		ATM_REG_IgainA         	0x62
-#define		ATM_REG_UoffsetA       	0x63
-#define		ATM_REG_IoffsetA       	0x64
+#define		ATM_REG_UoffsetA_Add       	0x63
+#define		ATM_REG_IoffsetA_Add       	0x64
 #define		ATM_REG_UgainB         	0x65
 #define		ATM_REG_IgainB         	0x66
-#define		ATM_REG_UoffsetB       	0x67
-#define		ATM_REG_IoffsetB       	0x68
+#define		ATM_REG_UoffsetB_Add       	0x67
+#define		ATM_REG_IoffsetB_Add       	0x68
 #define		ATM_REG_UgainC         	0x69
 #define		ATM_REG_IgainC         	0x6A
-#define		ATM_REG_UoffsetC       	0x6B
-#define		ATM_REG_IoffsetC       	0x6C
+#define		ATM_REG_UoffsetC_Add       	0x6B
+#define		ATM_REG_IoffsetC_Add       	0x6C
 #define		ATM_REG_IgainN         	0x6D
 #define		ATM_REG_IoffsetN       	0x6E
 #define		ATM_REG_CS3_Add            	0x6F
@@ -398,13 +398,13 @@ typedef enum
 #define		ATM_REG_PmeanBH     	  0xD6
 #define		ATM_REG_PmeanCH     	  0xD7
 #define		ATM_REG_IrmsN1      	  0xD8
-#define		ATM_REG_UrmsA       	  0xD9
-#define		ATM_REG_UrmsB       	  0xDA
-#define		ATM_REG_UrmsC       	  0xDB
-#define		ATM_REG_IrmsN0      	  0xDC
-#define		ATM_REG_IrmsA       	  0xDD
-#define		ATM_REG_IrmsB       	  0xDE
-#define		ATM_REG_IrmsC       	  0xDF
+#define		ATM_REG_UrmsA_Add       	  0xD9
+#define		ATM_REG_UrmsB_Add       	  0xDA
+#define		ATM_REG_UrmsC_Add       	  0xDB
+#define		ATM_REG_IrmsN0_Add      	  0xDC
+#define		ATM_REG_IrmsA_Add       	  0xDD
+#define		ATM_REG_IrmsB_Add       	  0xDE
+#define		ATM_REG_IrmsC_Add       	  0xDF
 #define		ATM_REG_PmeanTFLSB  	  0xE0
 #define		ATM_REG_PmeanAFLSB  	  0xE1
 #define		ATM_REG_PmeanBFLSB  	  0xE2
@@ -413,12 +413,12 @@ typedef enum
 #define		ATM_REG_PmeanAHLSB  	  0xE5
 #define		ATM_REG_PmeanBHLSB  	  0xE6
 #define		ATM_REG_PmeanCHLSB  	  0xE7
-#define		ATM_REG_UrmsALSB    	  0xE9
-#define		ATM_REG_UrmsBLSB    	  0xEA
-#define		ATM_REG_UrmsCLSB    	  0xEB
-#define		ATM_REG_IrmsALSB    	  0xED
-#define		ATM_REG_IrmsBLSB    	  0xEE
-#define		ATM_REG_IrmsCLSB    	  0xEF
+#define		ATM_REG_UrmsALSB_Add    	  0xE9
+#define		ATM_REG_UrmsBLSB_Add    	  0xEA
+#define		ATM_REG_UrmsCLSB_Add    	  0xEB
+#define		ATM_REG_IrmsALSB_Add    	  0xED
+#define		ATM_REG_IrmsBLSB_Add    	  0xEE
+#define		ATM_REG_IrmsCLSB_Add    	  0xEF
 #define		ATM_REG_THDNUA			    0xF1 // THD+N, Frequency, Angle and Temperature Registers
 #define		ATM_REG_THDNUB      	  0xF2
 #define		ATM_REG_THDNUC      	  0xF3

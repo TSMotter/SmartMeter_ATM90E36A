@@ -19,14 +19,15 @@
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
-#define MAX_RETRIES 10
-#define ATM_RTOS_DEFAULT_DELAYS	RTOS_DELAY_MS(20)
-#define SIMULA_DADOS_ENERGIA 0
-#define MAX_MEDIDAS_ASSINADAS 10
+#define MAX_RETRIES 								10
+#define ATM_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(20)
+#define SIMULA_DADOS_ENERGIA 				0
+#define MAX_MEDIDAS_ASSINADAS 			10
+#define NUM_AMOSTRAS_MEDIA_CALIB		20
 
-#define zAssert(func)  	 	 		\
-    		{                  		\
-    		  int _err = func; 		\
+#define zAssert(func)  	 	 			\
+    		{                  			\
+    		  int _err = func; 			\
     		  if (!_err) { break; } \
     		}												
 
@@ -64,7 +65,7 @@ typedef enum
 	AtmState_CalibIoffsetCReg,
 	AtmState_CalibGain_all_phases_V,
 	AtmState_CalibGain_all_phases_I,
-	StateReadWrite_CS3,	
+	AtmState_ReadWrite_CS3,	
 				 
 	// States for Operation Op. Mode:
 	AtmState_SubscribeMeasures,

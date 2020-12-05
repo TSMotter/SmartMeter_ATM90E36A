@@ -26,6 +26,9 @@ static bool walk3_machine (uint16_t addr, uint16_t value, atm_states_en next_sta
 static bool send_event_to_leds  (uint8_t Command, uint16_t wMillisec);
 static bool send_event_to_uart  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
+static bool calib_offset_reg(uint16_t reg[3]);
+static uint16_t faz_calculos_processo_calib(uint32_t valor_medio);
+
 static bool assina_medidas  (uint8_t *data, uint16_t len);
 static bool realiza_medidas (void);
 
@@ -50,11 +53,13 @@ static bool Acquire_Pc_fund (uint16_t *read_val);
 static bool Acquire_Pa_harm (uint16_t *read_val);
 static bool Acquire_Pb_harm (uint16_t *read_val);
 static bool Acquire_Pc_harm (uint16_t *read_val);
+
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
 extern SemaphoreHandle_t SyncMeasureSem;
 extern TIM_HandleTypeDef htim3;
+
 /***************************************************************************************************
 * Vars
 ***************************************************************************************************/
@@ -64,6 +69,13 @@ static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 // Reg address and value to individually read/write through UART commands
 static uint16_t RegisterAddress = 0;
 static uint16_t RegisterVal = 0;    
+
+static uint16_t vetor_regs_calib_offset[6][3] = { {ATM_REG_UrmsA_Add, ATM_REG_UrmsALSB_Add, ATM_REG_UoffsetA_Add}, 
+                                                  {ATM_REG_UrmsB_Add, ATM_REG_UrmsBLSB_Add, ATM_REG_UoffsetB_Add}, 
+                                                  {ATM_REG_UrmsC_Add, ATM_REG_UrmsCLSB_Add, ATM_REG_UoffsetC_Add}, 
+                                                  {ATM_REG_IrmsA_Add, ATM_REG_IrmsALSB_Add, ATM_REG_IoffsetA_Add}, 
+                                                  {ATM_REG_IrmsB_Add, ATM_REG_IrmsBLSB_Add, ATM_REG_IoffsetB_Add}, 
+                                                  {ATM_REG_IrmsC_Add, ATM_REG_IrmsCLSB_Add, ATM_REG_IoffsetC_Add}};
 
 static assinatura_de_medidas_st vetor_medidas_assinadas[MAX_MEDIDAS_ASSINADAS] = {0};
 
@@ -201,7 +213,7 @@ void ATM_api_check_queue(void)
           else if (NewEvent.bySubCmd == subCmd_Gain_all_phases_I)
           	ATM.State.Current = AtmState_CalibGain_all_phases_I;
           else if (NewEvent.bySubCmd == subCmd_Read_WriteCS3)
-          	ATM.State.Current = StateReadWrite_CS3;         
+          	ATM.State.Current = AtmState_ReadWrite_CS3;         
         }
         break;
         //----------------------------------------------
@@ -463,7 +475,7 @@ void ATM_machine_suspended_mode(void)
     //----------------------------------------------
     case AtmState_Stall:
       // does nothing
-      osDelay(10);
+      vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
     break;
     //----------------------------------------------
     case AtmState_SoftReset:
@@ -619,9 +631,50 @@ void ATM_machine_calib_mode(void)
       walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, subCmd_BlinkSpeed_Medium), AtmState_CalibAdjStartReg);
     break;
     //----------------------------------------------
-    case AtmState_CalibAdjStartReg:
-
+    case AtmState_Stall:
+      // does nothing
+      vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
     break;
+    //----------------------------------------------
+    case AtmState_CalibAdjStartReg:
+      if(ATM.State.Previous == AtmState_CalibAdjStartReg)
+      {
+        zAssert(walk3_machine(ATM_REG_CalStart_Add, CS_REG_Value_Calibration, AtmState_Stall));
+      }
+      else if (ATM.State.Previous == AtmState_ReadWrite_CS3)
+      {
+        zAssert(walk3_machine(ATM_REG_CalStart_Add, CS_REG_Value_Operation, AtmState_Suspended));
+        ATM.Mode = SuspendedMode;
+      }
+    break;
+    //----------------------------------------------
+    case AtmState_CalibUoffsetAReg:
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[0]), AtmState_Stall));
+    break;
+    //----------------------------------------------
+    case AtmState_CalibUoffsetBReg:
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[1]), AtmState_Stall));
+    break;
+    //----------------------------------------------
+    case AtmState_CalibUoffsetCReg:
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[2]), AtmState_Stall));
+    break;
+    //----------------------------------------------
+    case AtmState_CalibIoffsetAReg:
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[3]), AtmState_Stall));
+    break;
+    //----------------------------------------------
+    case AtmState_CalibIoffsetBReg:
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[4]), AtmState_Stall));
+    break; 
+    //----------------------------------------------
+    case AtmState_CalibIoffsetCReg:
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[5]), AtmState_Stall));
+    break; 
+    //----------------------------------------------
+    case AtmState_ReadWrite_CS3:
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS1_Add), AtmState_CalibAdjStartReg));
+    break;     
     //----------------------------------------------
     default:
     break;
@@ -637,10 +690,8 @@ void ATM_machine_operation_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS1_Add), 0));
-      zAssert(walk3_machine(ATM_REG_CalStart, CS_REG_Value_Operation, 0));
       zAssert(walk1_machine(config_reg_CS(ATM_REG_CS3_Add), 0));
-      zAssert(walk3_machine(ATM_REG_AdjStart, CS_REG_Value_Operation, 0));
+      zAssert(walk3_machine(ATM_REG_AdjStart_Add, CS_REG_Value_Operation, 0));
       
       walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, subCmd_BlinkSpeed_Fast), AtmState_SubscribeMeasures);
     break;
@@ -673,6 +724,72 @@ void ATM_machine_operation_mode(void)
     default:
     break;
   }  
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool calib_offset_reg(uint16_t reg[3])
+{
+  uint16_t k = 0;
+  uint32_t valor_rms_acumulado = 0;
+
+  // Realiza uma serie de leituras
+  for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
+  {
+    uint16_t RxVal = 0;
+    uint32_t valor_rms_instantaneo = 0;
+
+    // Read reg rms value
+    if(ATM.Drv.read_reg(reg[0], &RxVal) == ATM_RC_OK)
+    {
+      valor_rms_instantaneo = (uint32_t)(RxVal << 16) & 0xffff0000;
+
+      // Read reg rms LSB value
+      if(ATM.Drv.read_reg(reg[1], &RxVal) == ATM_RC_OK)
+      {
+        valor_rms_instantaneo |= RxVal;
+        valor_rms_acumulado += valor_rms_instantaneo;
+        continue;
+      }
+    }
+    return false;
+  }
+
+  // Calcula a media
+  valor_rms_acumulado = valor_rms_acumulado/NUM_AMOSTRAS_MEDIA_CALIB;
+  uint16_t TxVal = faz_calculos_processo_calib(valor_rms_acumulado);
+
+  // Realiza a escrita no registrador de calibracao
+  if(ATM.Drv.write_reg(reg[2], TxVal) == ATM_RC_OK)
+  {
+    return true; // Sucesso !
+  }
+
+  return false;
+}
+
+/***************************************************************************************************
+* @brief Realiza o processo explicado na sessao 4.2.5 do app. note
+***************************************************************************************************/
+static uint16_t faz_calculos_processo_calib(uint32_t valor_medio)
+{
+  uint32_t valor_complemento2 = 0;
+  uint16_t rc = 0;
+
+  // Descarta 7 bits LSB
+  valor_medio = (valor_medio >> 7);
+
+  // Mascara para garantir que 7 bits MSB são realmente zero
+  valor_medio &= 0x01FFFFFF;
+
+  // Realiza o complemento de 2
+  valor_complemento2 = (~valor_medio) + 1;
+
+  // Retorna 16 bits LSB
+  rc = valor_complemento2;
+
+  return rc;
 }
 
 /***************************************************************************************************
