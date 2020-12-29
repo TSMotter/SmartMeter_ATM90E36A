@@ -24,7 +24,7 @@
 #elif (_EEPROM_SIZE_KBIT == 4) || (_EEPROM_SIZE_KBIT == 8) || (_EEPROM_SIZE_KBIT == 16)
 #define _EEPROM_PSIZE     16
 #else
-#define _EEPROM_PSIZE     64//32
+#define _EEPROM_PSIZE     64
 #endif
 
 /***************************************************************************************************
@@ -172,3 +172,27 @@ bool ee24_eraseChip(void)
 	return true;  
 }
 
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool EE24_TestChip(void)
+{
+	uint8_t dado_para_ser_escrito[WRITE_SIZE_TEST] = {0}, dado_lido[WRITE_SIZE_TEST] = {0};
+
+	memset(dado_para_ser_escrito, 0xA5, WRITE_SIZE_TEST);
+
+	if(ee24_isConnected())
+	{
+		if(ee24_write(0, dado_para_ser_escrito, WRITE_SIZE_TEST, 1000))
+		{
+			if(ee24_read(0, dado_lido, WRITE_SIZE_TEST, 1000))
+			{
+				if(!memcmp(dado_para_ser_escrito, dado_lido, WRITE_SIZE_TEST))
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}

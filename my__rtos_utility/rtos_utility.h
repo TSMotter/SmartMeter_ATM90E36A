@@ -61,6 +61,15 @@ enum
 };
 
 //------------------------------------------------------------------------
+// LISTA DE COMANDOS UART -> LEDS
+//------------------------------------------------------------------------
+// Comandos
+enum
+{
+  Cmd_TestEEPROM = 1,
+};
+
+//------------------------------------------------------------------------
 // LISTA DE COMANDOS ATM -> UART
 //------------------------------------------------------------------------
 // Comandos
@@ -78,6 +87,8 @@ enum
   subCmd_print_irq0,
   subCmd_print_irq1,
   subCmd_print_line_feed,
+  subCmd_print_teste_eeprom_ok,
+  subCmd_print_teste_eeprom_error,
 };
 
 //------------------------------------------------------------------------
@@ -123,6 +134,8 @@ typedef enum
   EvntFromUARTtoATM,
   EvntFromUARTtoPCF,
   EvntFromUARTtoLEDS,
+
+  EvntFromLEDStoUART,
 } RTOS_Events_en;
 
 // Estrutura basica de comunicacao entre Tasks

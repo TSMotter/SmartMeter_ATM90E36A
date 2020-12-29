@@ -34,7 +34,7 @@ void start_sx1278_task(void const * argument)
 
   for(;;)
   {
-    osDelay(100);
+    vTaskDelay(SX_RTOS_DEFAULT_DELAYS);
   }
 
 }

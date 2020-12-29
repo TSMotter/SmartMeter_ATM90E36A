@@ -21,6 +21,7 @@ static void Insert_Byte_Buffer_Linear         (uint8_t byByte);
 static void Buffer_Clear                      (void);
 static void Command_Parse                     (char *pbyBuffer);
 static bool send_event_to_atm                 (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
+static bool send_event_to_leds                (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
 /***************************************************************************************************
 * Externals
@@ -215,6 +216,23 @@ static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t Su
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
+static bool send_event_to_leds(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
+{
+  xQueueHandle* posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_LEDS);
+
+  GenericQueueData_st stEvent;
+  stEvent.enEvent   = Target;
+  stEvent.byCmd     = Command;
+  stEvent.bySubCmd  = SubCommand;
+  stEvent.pbyData   = 0;
+  stEvent.wDataLen  = DataLen;
+
+  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, UART_RTOS_DEFAULT_DELAYS);
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
 void UART_Parser_Comando_Burro(uint8_t *pbyRxBuff)
 {
   UARTStructure.ID      = (pbyRxBuff[1] - 0x30);
@@ -246,7 +264,7 @@ bool UART_Envia_Eventos(void)
   }
   else if (UARTStructure.ID == 2)
   {
-    return true;
+    return send_event_to_leds(EvntFromUARTtoLEDS, UARTStructure.SubID, UARTStructure.Comando, UARTStructure.DataLen);;
   }
   return false;
 }
@@ -267,6 +285,7 @@ void UART_check_queue(void)
   /* Verifica qual evento foi recebido */
   switch (NewEvent.enEvent)
   {
+    //----------------------------------------------------------
     case EvntFromATMtoUART:
       switch (NewEvent.byCmd)
       {
@@ -310,7 +329,32 @@ void UART_check_queue(void)
         break;
       } // switch byCmd
     break;
+    
+    //----------------------------------------------------------
+    case EvntFromLEDStoUART:
+      switch (NewEvent.byCmd)
+      {
+        //----------------------------------------------------------
+        case Cmd_PrintThis:
+          osDelay(10);
+          if(NewEvent.bySubCmd ==   subCmd_print_teste_eeprom_ok)
+          {
+            HAL_UART_Transmit(UART.huart, (uint8_t*)MSG_TESTE_EEPROM_OK, strlen(MSG_TESTE_EEPROM_OK), 1000);
+            break;
+          }
+          else if(NewEvent.bySubCmd ==   subCmd_print_teste_eeprom_error)
+          {
+            HAL_UART_Transmit(UART.huart, (uint8_t*)MSG_TESTE_EEPROM_ERR, strlen(MSG_TESTE_EEPROM_ERR), 1000);
+            break;
+          }
+        break;
+        //----------------------------------------------------------
+        default:
+        break;
+      }    
+    break;
 
+    //----------------------------------------------------------
     default:
     break;
   } // switch enEvent

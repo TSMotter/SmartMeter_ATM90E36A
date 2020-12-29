@@ -14,11 +14,13 @@
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
+static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
 extern TIM_HandleTypeDef htim2;
+
 /***************************************************************************************************
 * Vars
 ***************************************************************************************************/
@@ -88,9 +90,46 @@ void LEDS_check_queue (void)
       }
     break;
 
+    case EvntFromUARTtoLEDS:
+      switch (NewEvent.byCmd)
+	    {
+        //----------------------------------------------
+        case Cmd_TestEEPROM:
+          if(EE24_TestChip())
+          {
+            send_event_to_uart(Cmd_PrintThis, subCmd_print_teste_eeprom_ok, 0);
+          }
+          else
+          {
+            send_event_to_uart(Cmd_PrintThis, subCmd_print_teste_eeprom_error, 0);
+          }
+        break;
+        //----------------------------------------------
+        default:
+        break;        
+      }    
+    break;
+
     default:
     break;
   }
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
+{
+  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_UART);
+  GenericQueueData_st stEvent;
+
+  stEvent.enEvent = EvntFromLEDStoUART;
+  stEvent.byCmd = Command;
+  stEvent.bySubCmd = SubCommand;
+  stEvent.pbyData = NULL;
+  stEvent.wDataLen = DataLen;
+
+  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, LEDS_RTOS_DEFAULT_DELAY);
 }
 
 /***************************************************************************************************

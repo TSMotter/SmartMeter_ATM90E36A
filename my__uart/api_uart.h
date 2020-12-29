@@ -21,15 +21,17 @@
 #define RB_Size 128 	// (in bytes)
 #define UART_RTOS_DEFAULT_DELAYS 0
 
-#define MSG_PRINT_STARTED (char*)"Meter Ready...\n"
-#define MSG_PRINT_THIS    (char*)"Meter -> Print: %s \n"
-#define MSG_ERRO_WARN	    (char*)"Meter -> Pino WARN: %s \n"
-#define MSG_ERRO_IRQ0	    (char*)"Meter -> Pino IRQ0: %s \n"
-#define MSG_ERRO_IRQ1	    (char*)"Meter -> Pino IRQ1: %s \n"
-#define MSG_ERRO_CRC      (char*)"Meter -> Erro CRC\n"
-#define MSG_ERRO_MALLOC   (char*)"Meter -> Erro Malloc\n"
-#define MSG_ACK           (char*)"Meter -> Ack\n"
-#define MSG_LINE_FEED     (char*)"\n"
+#define MSG_PRINT_STARTED     (char*)"Meter Ready...\n"
+#define MSG_PRINT_THIS        (char*)"Meter -> Print: %s \n"
+#define MSG_ERRO_WARN	        (char*)"Meter -> Pino WARN: %s \n"
+#define MSG_ERRO_IRQ0	        (char*)"Meter -> Pino IRQ0: %s \n"
+#define MSG_ERRO_IRQ1	        (char*)"Meter -> Pino IRQ1: %s \n"
+#define MSG_ERRO_CRC          (char*)"Meter -> Erro CRC\n"
+#define MSG_ERRO_MALLOC       (char*)"Meter -> Erro Malloc\n"
+#define MSG_ACK               (char*)"Meter -> Ack\n"
+#define MSG_LINE_FEED         (char*)"\n"
+#define MSG_TESTE_EEPROM_OK   (char*)"Teste EEPROM OK\n"
+#define MSG_TESTE_EEPROM_ERR  (char*)"Teste EEPROM ERROR\n"
 
 // Defines usados para printar dados na UART
 // caso queria printar timestamp, aumentar para 300
