@@ -29,7 +29,7 @@ static bool send_event_to_uart  (uint8_t Command, uint8_t SubCommand, uint16_t D
 static bool calib_offset_reg(uint16_t reg[3]);
 static uint16_t faz_calculos_processo_calib(uint32_t valor_medio);
 
-static bool assina_medidas  (uint8_t *data, uint16_t len);
+static bool assina_medidas  (uint16_t id);
 static bool realiza_medidas (void);
 
 static bool Acquire_Va      (uint16_t *read_val); 	
@@ -70,14 +70,49 @@ static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 static uint16_t RegisterAddress = 0;
 static uint16_t RegisterVal = 0;    
 
-static uint16_t vetor_regs_calib_offset[6][3] = { {ATM_REG_UrmsA_Add, ATM_REG_UrmsALSB_Add, ATM_REG_UoffsetA_Add}, 
-                                                  {ATM_REG_UrmsB_Add, ATM_REG_UrmsBLSB_Add, ATM_REG_UoffsetB_Add}, 
-                                                  {ATM_REG_UrmsC_Add, ATM_REG_UrmsCLSB_Add, ATM_REG_UoffsetC_Add}, 
-                                                  {ATM_REG_IrmsA_Add, ATM_REG_IrmsALSB_Add, ATM_REG_IoffsetA_Add}, 
-                                                  {ATM_REG_IrmsB_Add, ATM_REG_IrmsBLSB_Add, ATM_REG_IoffsetB_Add}, 
-                                                  {ATM_REG_IrmsC_Add, ATM_REG_IrmsCLSB_Add, ATM_REG_IoffsetC_Add}};
+static uint16_t vetor_regs_calib_offset[6][3] = { 
+  {ATM_REG_UrmsA_Add, ATM_REG_UrmsALSB_Add, ATM_REG_UoffsetA_Add}, 
+  {ATM_REG_UrmsB_Add, ATM_REG_UrmsBLSB_Add, ATM_REG_UoffsetB_Add}, 
+  {ATM_REG_UrmsC_Add, ATM_REG_UrmsCLSB_Add, ATM_REG_UoffsetC_Add}, 
+  {ATM_REG_IrmsA_Add, ATM_REG_IrmsALSB_Add, ATM_REG_IoffsetA_Add}, 
+  {ATM_REG_IrmsB_Add, ATM_REG_IrmsBLSB_Add, ATM_REG_IoffsetB_Add}, 
+  {ATM_REG_IrmsC_Add, ATM_REG_IrmsCLSB_Add, ATM_REG_IoffsetC_Add}
+  };
 
-static assinatura_de_medidas_st vetor_medidas_assinadas[MAX_MEDIDAS_ASSINADAS] = {0};
+static aquisicao_de_medidas_st vetor_de_aquisicao[num_of_total_available_measures] = {
+  {.active = false, .read_func = Acquire_Va},
+  {.active = false, .read_func = Acquire_Ia},
+  {.active = false, .read_func = Acquire_Pa},
+  {.active = false, .read_func = Acquire_Qa},
+  {.active = false, .read_func = Acquire_Sa},
+  {.active = false, .read_func = Acquire_Pa_fund},
+  {.active = false, .read_func = Acquire_Pa_harm},
+  {.active = false, .read_func = NULL},
+  {.active = false, .read_func = NULL},
+
+  {.active = false, .read_func = Acquire_Vb},
+  {.active = false, .read_func = Acquire_Ib},
+  {.active = false, .read_func = Acquire_Pb},
+  {.active = false, .read_func = Acquire_Qb},
+  {.active = false, .read_func = Acquire_Sb},
+  {.active = false, .read_func = Acquire_Pb_fund},
+  {.active = false, .read_func = Acquire_Pb_harm},
+  {.active = false, .read_func = NULL},
+  {.active = false, .read_func = NULL},
+
+  {.active = false, .read_func = Acquire_Vc},
+  {.active = false, .read_func = Acquire_Ic},
+  {.active = false, .read_func = Acquire_Pc},
+  {.active = false, .read_func = Acquire_Qc},
+  {.active = false, .read_func = Acquire_Sc},
+  {.active = false, .read_func = Acquire_Pc_fund},
+  {.active = false, .read_func = Acquire_Pc_harm},
+  {.active = false, .read_func = NULL},
+  {.active = false, .read_func = NULL},    
+
+  {.active = false, .read_func = NULL},
+
+};
 
 /***************************************************************************************************
 * @brief 
@@ -256,7 +291,7 @@ void ATM_api_check_queue(void)
         break;
         //----------------------------------------------
         case Cmd_SignMeasurements:
-          // Not yet implemented
+          assina_medidas(NewEvent.bySubCmd);
         break;
         //----------------------------------------------
         default:
@@ -698,8 +733,6 @@ void ATM_machine_operation_mode(void)
 
     //----------------------------------------------
     case AtmState_SubscribeMeasures:
-    // Inscreve variaveis no processo de leitura
-    assina_medidas(NULL, 0);
 
     // Starta timer 
     HAL_TIM_Base_Start_IT(&htim3);
@@ -795,17 +828,20 @@ static uint16_t faz_calculos_processo_calib(uint32_t valor_medio)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool assina_medidas(uint8_t *data, uint16_t len)
+static bool assina_medidas(uint16_t id)
 {
+  #if SIMULA_ASSINA_DADOS == 0
 
-  vetor_medidas_assinadas[0].id = voltage_rms_a;
-  vetor_medidas_assinadas[0].read_func = Acquire_Va;
-  vetor_medidas_assinadas[1].id = voltage_rms_b;
-  vetor_medidas_assinadas[1].read_func = Acquire_Vb;
-  vetor_medidas_assinadas[2].id = voltage_rms_c;
-  vetor_medidas_assinadas[2].read_func = Acquire_Vc;
-  vetor_medidas_assinadas[3].id = current_rms_a;      
-  vetor_medidas_assinadas[3].read_func = Acquire_Ia;
+    vetor_de_aquisicao[id].active = !vetor_de_aquisicao[id].active;
+
+  #elif SIMULA_ASSINA_DADOS == 1
+  
+    vetor_de_aquisicao[voltage_rms_a].active = true;
+    vetor_de_aquisicao[current_rms_a].active = true;
+    vetor_de_aquisicao[voltage_rms_b].active = true;
+    vetor_de_aquisicao[voltage_rms_c].active = true;  
+  
+  #endif
 
   return true;
 }
@@ -822,12 +858,12 @@ static bool realiza_medidas(void)
     uint16_t temp_read_val = 0, rc = 0;
     
     // Loopa bitmap e realiza leituras, 
-    for(uint8_t k = 0; k < MAX_MEDIDAS_ASSINADAS; k++)
+    for(uint16_t k = 0; k < num_of_total_available_measures; k++)
     {
-      if(vetor_medidas_assinadas[k].id)
+      if(vetor_de_aquisicao[k].active)
       {
-        vetor_medidas_assinadas[k].read_func(&temp_read_val);
-        dado_de_envio = (uint32_t)(vetor_medidas_assinadas[k].id << 16);
+        vetor_de_aquisicao[k].read_func(&temp_read_val);
+        dado_de_envio = (uint32_t) (k << 16);
         dado_de_envio |= (uint32_t)(temp_read_val);
 
         // Envia evento para task UART
@@ -835,13 +871,7 @@ static bool realiza_medidas(void)
       }
     }
 
-    send_event_to_uart(Cmd_PrintThis, subCmd_print_line_feed, 0);
-    
-    if(rc >= MAX_MEDIDAS_ASSINADAS)
-    {
-      return true;
-    }
-    return false;
+    return send_event_to_uart(Cmd_PrintThis, subCmd_print_line_feed, 0);
 
   #elif SIMULA_DADOS_ENERGIA == 1
 

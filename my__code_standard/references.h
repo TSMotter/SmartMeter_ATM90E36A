@@ -67,9 +67,13 @@ Protocolo UART:
 	|_ start of frame [0x24]
 
 - Observacoes:
-	. Datalen dira respeito apenas ao campo de dados
+	. Dados devem ser considerados como HEXA, mas representados como ASCII
+		(ex: Ler o reg 0xd9 -> <$01,05,00d9,,,38eb*>)
+	. DATALEN diz respeito apenas ao length do campo DATA
 	. A CRC devera ser calculada considerando todos os caracteres entre o SOF e EOF 
 		(inclusive os separadores)
+	. Campos podem ser omitidos, o importante eh sempre manter o numero certo de separadores
+		para nao estragar o parser
 	. Devera ser aplicado escape code nos caracteres:
 		0x2c --> 0x10 0x4c
 		0x2a --> 0x10 0x4a
@@ -80,7 +84,7 @@ Protocolo UART:
 		0x10 --> 0x10 0x20 (Que e o proprio escape)
 
 - Exemplo:
-	. <$81,01,0001,058934A8B4,fedf*> (valores tudo errado)
+	. <$01,05,00d9,,,38eb*>
 
 ***************************************************************************************************
 ATM90E36A:

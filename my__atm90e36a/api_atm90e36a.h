@@ -22,7 +22,7 @@
 #define MAX_RETRIES 								10
 #define ATM_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(20)
 #define SIMULA_DADOS_ENERGIA 				0
-#define MAX_MEDIDAS_ASSINADAS 			10
+#define SIMULA_ASSINA_DADOS					1
 #define NUM_AMOSTRAS_MEDIA_CALIB		20
 
 #define zAssert(func)  	 	 			\
@@ -97,10 +97,9 @@ typedef struct
 	uint16_t	      	Retry;
 }ATM90_app_st;
 
-// Must always start from 1
-typedef enum
+enum
 {
-	voltage_rms_a = 1,
+	voltage_rms_a = 0,
 	current_rms_a,
 	active_power_a,
 	reactive_power_a,
@@ -133,13 +132,13 @@ typedef enum
 	frequency,
 
 	num_of_total_available_measures,
-}measurements_id_en;
+};
 
 typedef struct
 {
-	measurements_id_en 	id;
-	bool				(*read_func)(uint16_t *val);
-}assinatura_de_medidas_st;
+	bool 	active;
+	bool	(*read_func)(uint16_t *val);
+}aquisicao_de_medidas_st;
 
 
 /***************************************************************************************************
