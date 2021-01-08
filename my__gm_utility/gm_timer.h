@@ -17,7 +17,7 @@
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
-#define MAX_SOFT_TIM_INSTANCES  5
+#define MAX_SOFT_TIM_INSTANCES  4
 #define MAX_SOFT_TIM_PERIOD_MS  10000
 
 // Comment/Uncomment one of these lines based on what is your application going to use

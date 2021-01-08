@@ -46,6 +46,7 @@ void SX1278_drv_init(sx1278_drv_st *drv)
   drv->read_burst_data = SX1278_read_burst_data;
   drv->write_data = SX1278_write_data;
   drv->write_burst_data = SX1278_write_burst_data;
+  drv->change_mode = SX1278_change_mode;
   drv->monitor_dio0 = SX1278_monitor_dio0;
   drv->hard_reset = SX1278_hard_reset;
 }
@@ -63,7 +64,7 @@ bool SX1278_read_data(uint8_t addr, uint8_t *data)
     rc = HAL_SPI_Transmit_IT(Sx1278Hw.SPI, &addr, 1);
     if(rc == HAL_OK)
     {
-      rc = HAL_SPI_Receive_IT(Sx1278Hw.SPI, data, 1);
+      rc += HAL_SPI_Receive_IT(Sx1278Hw.SPI, data, 1);
     }
     drive_gpio(&Sx1278Hw.CS, GPIO_PIN_SET);
     if(rc == HAL_OK)
@@ -75,7 +76,7 @@ bool SX1278_read_data(uint8_t addr, uint8_t *data)
 }
 
 /***************************************************************************************************
-* @brief 
+* @brief Com este tipo de acesso, o endereco incrementa sozinho
 ***************************************************************************************************/
 bool SX1278_read_burst_data(uint8_t addr, uint8_t *data, uint8_t len)
 {
@@ -89,7 +90,7 @@ bool SX1278_read_burst_data(uint8_t addr, uint8_t *data, uint8_t len)
     {
       for (uint8_t i = 0; i < len; i++) 
       {
-        rc = HAL_SPI_Receive_IT(Sx1278Hw.SPI, (data + i), 1);
+        rc += HAL_SPI_Receive_IT(Sx1278Hw.SPI, (data + i), 1);
       }
     }
     drive_gpio(&Sx1278Hw.CS, GPIO_PIN_SET);
@@ -125,7 +126,7 @@ bool SX1278_write_data(uint8_t addr, uint8_t data)
 }
 
 /***************************************************************************************************
-* @brief 
+* @brief Com este tipo de acesso, o endereco incrementa sozinho
 ***************************************************************************************************/
 bool SX1278_write_burst_data(uint8_t addr, uint8_t *data, uint8_t len)
 {
@@ -144,7 +145,7 @@ bool SX1278_write_burst_data(uint8_t addr, uint8_t *data, uint8_t len)
     rc = HAL_SPI_Transmit_IT(Sx1278Hw.SPI, &FullAddr, 1);
     for (uint8_t i = 0; i < len; i++) 
     {
-			HAL_SPI_Transmit_IT(Sx1278Hw.SPI, (data + i), 1);
+			rc += HAL_SPI_Transmit_IT(Sx1278Hw.SPI, (data + i), 1);
 		}
     drive_gpio(&Sx1278Hw.CS, GPIO_PIN_SET);
     if(rc == HAL_OK)
@@ -170,5 +171,14 @@ void SX1278_hard_reset(void)
 {
   drive_gpio(&Sx1278Hw.Reset, GPIO_PIN_RESET);
   HAL_Delay(200);
-  drive_gpio(&Sx1278Hw.Reset, GPIO_PIN_SET);  
+  drive_gpio(&Sx1278Hw.Reset, GPIO_PIN_SET); 
+  HAL_Delay(200); 
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+bool SX1278_change_mode(uint8_t mode)
+{
+  return SX1278_write_data(LR_RegOpMode, MODE_LORA_MODE | mode);
 }

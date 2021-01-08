@@ -22,10 +22,24 @@
 // Transforms (0x89 or 0d137) into (0d89)
 #define HexToDec(hex) ((((hex & 0xF0) >> 4) * 10) | (hex & 0x0F))
 
-#define GM_SOF 		      0x24//'$' //0x24
-#define GM_EOF 		      0x2a//'*' //0x2a
-#define GM_Separador 	  0x2c//',' //0x2c
+#define GM_SOF 		      0x24  //'$' //0x24
+#define GM_EOF 		      0x2a  //'*' //0x2a
+#define GM_Separador 	  0x2c  //',' //0x2c
 #define GM_Max_Command_Len  50
+
+
+/* 
+ Define através de qual porta de comunicação os dados de saida de energia
+ devem ser enviados
+
+ -> Comment or uncomment to selec LORA or UART port respectivelly
+*/
+#define USE_LORA_PORT
+
+#ifndef USE_LORA_PORT
+  #define USE_UART_PORT
+#endif
+
 
 static const unsigned short CRC_CCITT_TABLE[256] =
 {
@@ -63,6 +77,18 @@ static const unsigned short CRC_CCITT_TABLE[256] =
   0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
 };
 
+
+#define gAssert(func)  	 	 		          \
+    		{                  		          \
+    		  int _err = func; 		          \
+    		  if (!_err) { return false; }  \
+    		}	
+
+#define zAssert(func)  	 	 			\
+    		{                  			\
+    		  int _err = func; 			\
+    		  if (!_err) { break; } \
+    		}			        
 /***************************************************************************************************
 * Types
 ***************************************************************************************************/
@@ -85,13 +111,8 @@ void retira_escape_code (char *in, uint16_t len_in);
 
 
 /*
-unsigned char GM_ASCII_Coder          (uint8_t stripped_nib);
-void 					GM_Byte_to_ASCII        (uint8_t bt, uint8_t *Pstr);
-uint8_t 			GM_ByteVec_to_ASCIIStr  (uint8_t **P_Pvec, uint8_t *P_N, uint8_t **P_Pstr);
-uint8_t 			GM_ASCII_to_Byte        (uint8_t bt);
-int           GM_ASSERT               (void *function);
 void          GM_SET_PWM              (TIM_HandleTypeDef timer, uint32_t channel, uint16_t period, uint16_t pulse);
 void          GM_RTC_PRINT            (uint8_t vect_in[7], uint8_t *vect_out);
-
 */
+
 #endif

@@ -20,16 +20,10 @@
 * Defines
 ***************************************************************************************************/
 #define MAX_RETRIES 								10
-#define ATM_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(20)
+
 #define SIMULA_DADOS_ENERGIA 				0
 #define SIMULA_ASSINA_DADOS					1
-#define NUM_AMOSTRAS_MEDIA_CALIB		20
-
-#define zAssert(func)  	 	 			\
-    		{                  			\
-    		  int _err = func; 			\
-    		  if (!_err) { break; } \
-    		}												
+#define NUM_AMOSTRAS_MEDIA_CALIB		20									
 
 /***************************************************************************************************
 * Types
@@ -145,10 +139,7 @@ typedef struct
 * Prototypes
 ***************************************************************************************************/
 bool 	ATM_api_init							(void);
-void 	ATM_api_change_state			(atm_states_en next_state);
-void 	ATM_api_check_retry				(void);
-void 	ATM_api_check_hw_pins			(void);
-void 	ATM_api_check_queue				(void);
+
 void 	ATM_api_periodic_checks		(void);
 
 void 	ATM_machine_suspended_mode	(void);

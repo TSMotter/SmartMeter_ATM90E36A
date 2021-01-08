@@ -19,7 +19,6 @@
 * Defines
 ***************************************************************************************************/
 #define RB_Size 128 	// (in bytes)
-#define UART_RTOS_DEFAULT_DELAYS 0
 
 #define MSG_PRINT_STARTED     (char*)"Meter Ready...\n"
 #define MSG_PRINT_THIS        (char*)"Meter -> Print: %s \n"

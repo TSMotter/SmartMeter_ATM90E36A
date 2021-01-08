@@ -15,6 +15,11 @@
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
+static void   ATM_api_check_queue       (void);
+static void 	ATM_api_check_retry				(void);
+static void 	ATM_api_check_hw_pins			(void);
+static void   ATM_api_change_state      (atm_states_en next_state);
+
 static bool config_reg_MMode0 (void);
 static bool config_reg_MMode1 (void);
 static bool config_reg_CS     (uint16_t reg);
@@ -25,6 +30,7 @@ static bool walk3_machine (uint16_t addr, uint16_t value, atm_states_en next_sta
 
 static bool send_event_to_leds  (uint8_t Command, uint16_t wMillisec);
 static bool send_event_to_uart  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
+static bool send_event_to_lora  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
 static bool calib_offset_reg(uint16_t reg[3]);
 static uint16_t faz_calculos_processo_calib(uint32_t valor_medio);
@@ -141,7 +147,7 @@ bool ATM_api_init(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-void ATM_api_change_state(atm_states_en next_state)
+static void ATM_api_change_state(atm_states_en next_state)
 {
   ATM.State.Previous = ATM.State.Current;
   ATM.State.Current = next_state;
@@ -151,7 +157,7 @@ void ATM_api_change_state(atm_states_en next_state)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-void ATM_api_check_retry(void)
+static void ATM_api_check_retry(void)
 {
   if (ATM.Retry >= MAX_RETRIES)
   {
@@ -164,7 +170,7 @@ void ATM_api_check_retry(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-void ATM_api_check_hw_pins(void)
+static void ATM_api_check_hw_pins(void)
 {
   bool flag = false;
   uint16_t data = 0;
@@ -203,7 +209,7 @@ void ATM_api_check_hw_pins(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-void ATM_api_check_queue(void)
+static void ATM_api_check_queue(void)
 {
   GenericQueueData_st NewEvent;  
 
@@ -342,6 +348,23 @@ static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t Dat
   GenericQueueData_st stEvent;
 
   stEvent.enEvent = EvntFromATMtoUART;
+  stEvent.byCmd = Command;
+  stEvent.bySubCmd = SubCommand;
+  stEvent.pbyData = NULL;
+  stEvent.wDataLen = DataLen;
+
+  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, ATM_RTOS_DEFAULT_DELAYS);
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool send_event_to_lora(uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
+{
+  xQueueHandle *posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_LORA);
+  GenericQueueData_st stEvent;
+
+  stEvent.enEvent = EvntFromATMtoLORA;
   stEvent.byCmd = Command;
   stEvent.bySubCmd = SubCommand;
   stEvent.pbyData = NULL;
@@ -857,13 +880,14 @@ static bool realiza_medidas(void)
     uint32_t dado_de_envio = 0;
     uint16_t temp_read_val = 0, rc = 0;
     
-    // Loopa bitmap e realiza leituras, 
-    for(uint16_t k = 0; k < num_of_total_available_measures; k++)
+    // Varre vetor e realiza leituras, 
+    for(uint16_t indice = 0; indice < num_of_total_available_measures; indice++)
     {
-      if(vetor_de_aquisicao[k].active)
+      if(vetor_de_aquisicao[indice].active)
       {
-        vetor_de_aquisicao[k].read_func(&temp_read_val);
-        dado_de_envio = (uint32_t) (k << 16);
+        vetor_de_aquisicao[indice].read_func(&temp_read_val);
+
+        dado_de_envio = (uint32_t) (indice << 16);
         dado_de_envio |= (uint32_t)(temp_read_val);
 
         // Envia evento para task UART
@@ -871,7 +895,11 @@ static bool realiza_medidas(void)
       }
     }
 
-    return send_event_to_uart(Cmd_PrintThis, subCmd_print_line_feed, 0);
+    #ifdef USE_UART_PORT
+      return send_event_to_uart(Cmd_PrintThis, subCmd_print_line_feed, 0);
+    #elif defined USE_LORA_PORT
+      return send_event_to_lora(Cmd_SendEnergyData, 0, 0);
+    #endif
 
   #elif SIMULA_DADOS_ENERGIA == 1
 

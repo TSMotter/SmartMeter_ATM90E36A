@@ -140,15 +140,31 @@
 #define  RegPaDac				        0x4d
 #define  RegBitRateFrac			    0x5d
 
+/* 
+	Defines para uso no reg 0x01 (LR_RegOpMode)
+ 	Mascara considerando o valor padrao para os bits 3 e 4 
+ 	(que nao devem ser alterados pela aplicacao)
+*/
+#define RegOpMode_MASK					0x08 
+
+#define MODE_LORA_MODE     			0x80
+
+#define MODE_SLEEP              0x00
+#define MODE_STDBY              0x01
+#define MODE_TX                 0x03
+#define MODE_RX_CONTINUOUS      0x05
+#define MODE_RX_SINGLE          0x06
+
 /**********************************************************
  **Parameter table define
  **********************************************************/
 
 #define SX1278_POWER_20DBM		0
-#define SX1278_POWER_17DBM		1
+#define SX1278_POWER_17DBM		1 // Default
 #define SX1278_POWER_14DBM		2
 #define SX1278_POWER_11DBM		3
 
+#define SX1278_POWER_DEFAULT		1
 static const uint8_t SX1278_Power[4] = { 
     0xFF, //20dbm
 		0xFC, //17dbm
@@ -157,12 +173,14 @@ static const uint8_t SX1278_Power[4] = {
 		};
 
 #define SX1278_LORA_SF_6		0
-#define SX1278_LORA_SF_7		1
+#define SX1278_LORA_SF_7		1 // Default
 #define SX1278_LORA_SF_8		2
 #define SX1278_LORA_SF_9		3
 #define SX1278_LORA_SF_10		4
 #define SX1278_LORA_SF_11		5
 #define SX1278_LORA_SF_12		6
+
+#define SX1278_LORA_SF_DEFAULT		1
 
 static const uint8_t SX1278_SpreadFactor[7] = { 6, 7, 8, 9, 10, 11, 12 };
 
@@ -173,9 +191,11 @@ static const uint8_t SX1278_SpreadFactor[7] = { 6, 7, 8, 9, 10, 11, 12 };
 #define	SX1278_LORA_BW_31_2KHZ		4
 #define	SX1278_LORA_BW_41_7KHZ		5
 #define	SX1278_LORA_BW_62_5KHZ		6
-#define	SX1278_LORA_BW_125KHZ		  7
+#define	SX1278_LORA_BW_125KHZ		  7 // Default
 #define	SX1278_LORA_BW_250KHZ		  8
 #define	SX1278_LORA_BW_500KHZ		  9
+
+#define	SX1278_LORA_BW_DEFAULT		  7
 
 static const uint8_t SX1278_LoRaBandwidth[10] = { 
     0, //   7.8KHz,
@@ -191,18 +211,22 @@ static const uint8_t SX1278_LoRaBandwidth[10] = {
 		};
 
 //Coding rate
-#define SX1278_LORA_CR_4_5    0
+#define SX1278_LORA_CR_4_5    0 // Default
 #define SX1278_LORA_CR_4_6    1
 #define SX1278_LORA_CR_4_7    2
 #define SX1278_LORA_CR_4_8    3
 
+#define SX1278_LORA_CR_DEFAULT    0
+
 static const uint8_t SX1278_CodingRate[4] = { 0x01, 0x02, 0x03, 0x04 };
 
 //CRC Enable
-#define SX1278_LORA_CRC_EN              0
-#define SX1278_LORA_CRC_DIS             1
+#define SX1278_LORA_CRC_DIS             0	// Default
+#define SX1278_LORA_CRC_EN              1
 
-static const uint8_t SX1278_CRC_Sum[2] = { 0x01, 0x00 };
+#define SX1278_LORA_CRC_DEFAULT              0
+
+static const uint8_t SX1278_CRC_Sum[2] = { 0x00, 0x01};
 
 
 /***************************************************************************************************

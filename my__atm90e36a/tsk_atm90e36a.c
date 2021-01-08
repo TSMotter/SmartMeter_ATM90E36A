@@ -45,7 +45,7 @@ void start_atm90e36a_task(void const * argument)
 
   // Waits for other tasks to be ready, so this task can run
   uint32_t NotifyVal = 0;
-  while(NotifyVal != 2)
+  while(NotifyVal != 3)
   {
 	  if(ulTaskNotifyTake(pdFALSE, ATM_RTOS_DEFAULT_DELAYS))
 	  {

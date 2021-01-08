@@ -19,12 +19,8 @@
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
-#define SX_RTOS_DEFAULT_DELAYS					RTOS_DELAY_MS(50)
-#define gAssert(func)  	 	 		          \
-    		{                  		          \
-    		  int _err = func; 		          \
-    		  if (!_err) { return false; }  \
-    		}	
+
+
 /***************************************************************************************************
 * Types
 ***************************************************************************************************/
@@ -48,6 +44,8 @@ typedef struct
 {
   sx1278_drv_st Drv;
 
+	void(*tx_done_callback)(void);
+
 	QueueHandle_t			  Queue;
 	sx1278_states_st	  State;
   sx1278_op_mode_en  	Mode;
@@ -58,9 +56,8 @@ typedef struct
 * Prototypes
 ***************************************************************************************************/
 bool SX_api_init(void);
-bool SX_config  (uint64_t frequency, uint8_t power,
-		            uint8_t LoRa_SF, uint8_t LoRa_BW, uint8_t LoRa_CR,
-		            uint8_t LoRa_CRC_sum, uint8_t packetLength);
+bool SX_config(uint64_t frequency, uint8_t power, uint8_t LoRa_SF, 
+                uint8_t LoRa_BW, uint8_t LoRa_CR, uint8_t LoRa_CRC_sum);
 bool SX_EntryTxMode(uint8_t len);
 bool SX_EntryRxMode(uint8_t len);
 bool SX_TxPacket(uint8_t *data, uint16_t len,	uint32_t timeout);

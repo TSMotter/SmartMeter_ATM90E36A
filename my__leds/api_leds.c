@@ -61,7 +61,7 @@ void LEDS_check_queue (void)
   GenericQueueData_st NewEvent;
 
   // Verifica se ha eventos para tratar
-  if (xQueueReceive (*Queue_LEDS_HANDLE, &NewEvent, LEDS_RTOS_DEFAULT_DELAY) != pdPASS)
+  if (xQueueReceive (*Queue_LEDS_HANDLE, &NewEvent, LEDS_RTOS_DEFAULT_DELAYS) != pdPASS)
   {
     return;
   }
@@ -129,7 +129,7 @@ static bool send_event_to_uart(uint8_t Command, uint8_t SubCommand, uint16_t Dat
   stEvent.pbyData = NULL;
   stEvent.wDataLen = DataLen;
 
-  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, LEDS_RTOS_DEFAULT_DELAY);
+  return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, LEDS_RTOS_DEFAULT_DELAYS);
 }
 
 /***************************************************************************************************

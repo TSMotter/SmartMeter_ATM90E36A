@@ -39,14 +39,16 @@ static uint8_t                byIndiceMsg = 0;
 static bool                   bSalvandoMensagem = false;
 static ReceiveCommand_st      UARTStructure = {0};
 
-char print_buffer_uart_queue[40] = {0}, reg_value_in_char_uart_queue[5] = {0};
-char print_buffer_energy_queue[10] = {0};
-  
+static char print_buffer_uart_queue[40] = {0}, reg_value_in_char_uart_queue[5] = {0};
+static char print_buffer_energy_queue[50] = {0};
+
+
 static SemaphoreHandle_t 	xSemaphoreEOF;
 static QueueHandle_t 		  *Queue_UART_HANDLE = NULL;
-static QueueHandle_t      *Queue_ENERGY_HANDLE = NULL;
 static RINGBUFF_T         rbUart;
 static uint8_t            byRingBuffer[RB_Size] = {0};
+
+QueueHandle_t      *Queue_ENERGY_HANDLE = NULL;
 
 /***************************************************************************************************
 * @brief 
@@ -376,7 +378,7 @@ void UART_check_EnergyQueue(void)
   GM_U32_TO_8ASCIIS(hex_data, print_buffer_energy_queue);
   strcat(print_buffer_energy_queue, ",");
   HAL_UART_Transmit(UART.huart, (uint8_t*)print_buffer_energy_queue, 9, 1000);
-  memset(print_buffer_energy_queue, 0, 10);
+  memset(print_buffer_energy_queue, 0, 50);
 }
 
 /*

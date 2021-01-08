@@ -110,6 +110,18 @@ enum
   subCmd_BlinkSpeed_Fast = 200,
 };
 
+//------------------------------------------------------------------------
+// LISTA DE COMANDOS ATM -> LORA
+//------------------------------------------------------------------------
+// Comandos
+enum
+{
+  Cmd_SendEnergyData = 1,
+};
+
+// Sub comandos 
+
+
 /***************************************************************************************************
 * Types
 ***************************************************************************************************/
@@ -121,6 +133,7 @@ typedef enum
   QueueIDX_UART,
   QueueIDX_LEDS,
   QueueIDX_ENERGY,
+  QueueIDX_LORA,
 
   QueueIDX_NUMBER_OF_QUEUES,
 } RTOS_QueueIdx_en;
@@ -130,6 +143,7 @@ typedef enum
 {
   EvntFromATMtoUART,
   EvntFromATMtoLEDS,
+  EvntFromATMtoLORA,
 
   EvntFromUARTtoATM,
   EvntFromUARTtoPCF,
@@ -161,6 +175,14 @@ typedef struct
 #define SIZE_OF_QUEUE_ITEM 		      sizeof(GenericQueueData_st)
 #define SIZE_OF_ENERGY_QUEUE_ITEM 	sizeof(EnergyQueueData_st)
 #define RTOS_DELAY_MS(t)		        (t / portTICK_RATE_MS)
+
+//------------------------------------------------------------------------
+// Delays padrao das tasks
+//------------------------------------------------------------------------
+#define ATM_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(20)
+#define SX_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(50)
+#define LEDS_RTOS_DEFAULT_DELAYS    RTOS_DELAY_MS(20)
+#define UART_RTOS_DEFAULT_DELAYS    0
 
 /***************************************************************************************************
 * Prototypes

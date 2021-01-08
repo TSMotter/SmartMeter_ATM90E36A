@@ -56,7 +56,10 @@ void start_uart_task(void const * argument)
     }
 
     UART_check_queue();
+    
+    #ifdef USE_UART_PORT
     UART_check_EnergyQueue();
+    #endif
   }
 }
 

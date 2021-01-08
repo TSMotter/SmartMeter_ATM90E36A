@@ -30,7 +30,7 @@ static void         reload_timer                    (soft_tim_st *Timer);
 * Vars
 ***************************************************************************************************/
 static soft_tim_st TimersArray[MAX_SOFT_TIM_INSTANCES];
-
+static tick_type    tick_to_compare = 0;
 // Define what the "get tick" function is for your application:
 
 // Use this if you are going to use <time.h>
@@ -209,11 +209,13 @@ bool SofTim_StopTimer(soft_tim_st *Timer)
 ***************************************************************************************************/
 void SofTim_Tick(void)
 { 
+    tick_to_compare = Tick_Func();
+    
     for(int i = 0; i < MAX_SOFT_TIM_INSTANCES; i++)
     {
         if(TimersArray[i].status == TIMER_RUNNING)
         {
-            if(Tick_Func() >= TimersArray[i].private_member.target_tick)
+            if(tick_to_compare >= TimersArray[i].private_member.target_tick)
             {
                 // Calls the callback
                 TimersArray[i].call_back(TimersArray[i].param1, TimersArray[i].param2);

@@ -227,68 +227,6 @@ void retira_escape_code(char *in, uint16_t len_in)
 
 /*
 
-@brief Converte um byte em um ASCII maiusculo (eg: 9 = 0x39, 5 = 0x35, A = 0x41)
-unsigned char GM_ASCII_Coder (uint8_t stripped_nib) 
-{
-
-	// se esta entre 0x00 e 0x09, soma 0x30
-	if ((stripped_nib<=0x09))
-	{
-		return (stripped_nib + 0x30); 
-	}
-	else if ((stripped_nib>=0x0A)&(stripped_nib<=0x0F))
-	{
-		return (stripped_nib + 0x41 - 0x0A); // se entre 0x0A e 0x0F, soma (0x41-0x0A)
-	}
-	else
-	{
-		return (0x00); // retorna NULL caso contrario
-	}
-}
-
-void GM_Byte_to_ASCII (uint8_t bt, uint8_t* Pstr){
-	
-	unsigned char nibble0, nibble1;
-
-	// byte = 0 x nibble1 nibble0
-	//Operacao bit a bit (mascara) 
-	nibble0 = bt >> 4; // colocando & 0xF0 ficava tipo 0b00010000 (� necess�rio rolar pra direita)
-	nibble1 = bt & 0x0F;
-
-	Pstr[0] = GM_ASCII_Coder (nibble0);
-	Pstr[1] = GM_ASCII_Coder (nibble1);
-	Pstr[2] = '\0';
-}
-
-uint8_t GM_ByteVec_to_ASCIIStr (uint8_t** P_Pvec, uint8_t* P_N, uint8_t** P_Pstr)
-{
-	//pra acessar elemento do vetor usar **, para incrementar a contagem usar *
-	if(*P_N > 0)
-	{
-		GM_Byte_to_ASCII(**P_Pvec, *P_Pstr);
-		(*P_Pvec)++;
-		(*P_Pstr)=(*P_Pstr)+2;
-		(*P_N)--;
-		return 1;
-	}
-	else 
-	{
-		return 0;
-	}
-}
-
-
-int GM_ASSERT(void (*function))
-{
-	int _err = function();
-	if (_err)
-	{
-		return _err;
-	}
-
-	return 0;
-}
-
 void GM_SET_PWM(TIM_HandleTypeDef timer, uint32_t channel, uint16_t period, uint16_t pulse)
 {
 	HAL_TIM_PWM_Stop(&timer, channel); // stop generation of pwm
