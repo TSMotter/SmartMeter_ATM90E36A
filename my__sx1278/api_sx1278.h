@@ -15,11 +15,10 @@
 #include <stdbool.h>
 #include "rtos_utility.h"
 #include "driver_sx1278.h"
-
+#include "protocolo.h"
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
-
 
 /***************************************************************************************************
 * Types
@@ -42,13 +41,21 @@ typedef enum
 
 typedef struct
 {
+  uint8_t   data[GM_Max_Command_Len];
+  uint8_t   len;
+  int       rssi;  
+}sx1278_packet_st;
+
+typedef struct
+{
   sx1278_drv_st Drv;
 
 	void(*tx_done_callback)(void);
 
+  sx1278_packet_st    Pacote;
+
 	QueueHandle_t			  Queue;
 	sx1278_states_st	  State;
-  sx1278_op_mode_en  	Mode;
 	uint16_t	      	  Retry;  
 }SX1278_app_st;
 

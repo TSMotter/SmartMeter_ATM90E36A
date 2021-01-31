@@ -305,16 +305,16 @@ typedef enum
 #define		ATM_REG_PGainCF       	0x56
 #define		ATM_REG_CS2_Add           	0x57
 #define		ATM_REG_AdjStart_Add		    0x60 // Measurement Calibration
-#define		ATM_REG_UgainA         	0x61
-#define		ATM_REG_IgainA         	0x62
+#define		ATM_REG_UgainA_Add         	0x61
+#define		ATM_REG_IgainA_Add         	0x62
 #define		ATM_REG_UoffsetA_Add       	0x63
 #define		ATM_REG_IoffsetA_Add       	0x64
-#define		ATM_REG_UgainB         	0x65
-#define		ATM_REG_IgainB         	0x66
+#define		ATM_REG_UgainB_Add         	0x65
+#define		ATM_REG_IgainB_Add         	0x66
 #define		ATM_REG_UoffsetB_Add       	0x67
 #define		ATM_REG_IoffsetB_Add       	0x68
-#define		ATM_REG_UgainC         	0x69
-#define		ATM_REG_IgainC         	0x6A
+#define		ATM_REG_UgainC_Add         	0x69
+#define		ATM_REG_IgainC_Add         	0x6A
 #define		ATM_REG_UoffsetC_Add       	0x6B
 #define		ATM_REG_IoffsetC_Add       	0x6C
 #define		ATM_REG_IgainN         	0x6D

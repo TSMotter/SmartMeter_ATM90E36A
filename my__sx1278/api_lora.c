@@ -15,7 +15,8 @@
 * Private Functions Prototypes
 ***************************************************************************************************/
 static void lora_api_check_queue  (void);
-static bool lora_send_energy_data(void);
+static bool lora_send_energy_data (void);
+static bool lora_envia_eventos    (receive_command_st *RxStruct);
 
 static bool   lora_sleep                        (void);
 static bool   lora_standby                      (void);
@@ -66,8 +67,6 @@ bool LORA_api_init(void)
 
   SX1278_drv_init(&LORA.Drv);
 
-  LORA.State.Current = SxState_Suspended;
-  LORA.Mode = ListeningMode;
   LORA.Queue = *Queue_LORA_HANDLE;
 
   return true;
@@ -130,27 +129,70 @@ bool LORA_Transmit(uint8_t *buffer, size_t len, uint32_t timeout)
 * @param impl_hdr_size_to_read: Normally will be '0', meaning that the module is operating in Explicit
 * header mode. If Implicit header mode is wanted, user must inform how many bytes want to recieve here
 ***************************************************************************************************/
-bool LORA_Receive(uint8_t impl_hdr_size_to_read, uint8_t *packet, uint8_t *len_was_read, int *rssi)
+bool LORA_Receive(uint8_t impl_hdr_size_to_read, sx1278_packet_st *pacote)
 {
-  gAssert(lora_rx_single_begin_packet(impl_hdr_size_to_read, len_was_read));
+  gAssert(lora_rx_single_begin_packet(impl_hdr_size_to_read, &pacote->len));
 
-  if(*len_was_read)
+  if(pacote->len)
   {
-    gAssert(lora_rx_single_read(*len_was_read, packet));
-    gAssert(lora_get_rssi(rssi));
+    gAssert(lora_rx_single_read(pacote->len, pacote->data));
+    gAssert(lora_get_rssi(&pacote->rssi));
   }
 
   return true;
 }
 
 /***************************************************************************************************
+* @brief Processa comando recebido e envia evento para outras tasks
+***************************************************************************************************/
+bool LORA_Process_n_SendEvents(sx1278_packet_st *pacote)
+{
+  receive_command_st  PROT_Structure = {0};
+  bool rc = false;
+
+  if(PROT_Parser(&PROT_Structure, (char*)pacote->data) == Prot_OK)
+  {
+    rc = lora_envia_eventos(&PROT_Structure);
+  }
+
+  pacote->len = 0;
+
+  return rc;
+}
+
+/***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-bool LORA_Process(uint8_t *buffer, size_t len)
+static bool lora_envia_eventos(receive_command_st *RxStruct)
 {
+  xQueueHandle* posQueEvtHandle = NULL;
+  GenericQueueData_st stEvent = {0};
 
-  return true;
+  if (RxStruct->ID == 1)
+  {
+    posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_ATM);
+    stEvent.byCmd     = EvntFromSXtoATM;
+    stEvent.enEvent   = RxStruct->SubID;
+    stEvent.bySubCmd  = RxStruct->Comando;
+    stEvent.pbyData   = 0;
+    stEvent.wDataLen  = RxStruct->DataLen;
+
+    return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, SX_RTOS_DEFAULT_DELAYS);    
+  }
+  else if (RxStruct->ID == 2)
+  {
+    posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_UART);
+    stEvent.byCmd     = EvntFromSXtoUART;
+    stEvent.enEvent   = RxStruct->SubID;
+    stEvent.bySubCmd  = RxStruct->Comando;
+    stEvent.pbyData   = 0;
+    stEvent.wDataLen  = RxStruct->DataLen;
+
+    return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, SX_RTOS_DEFAULT_DELAYS);  
+  }
+  return false;
 }
+
 
 /***************************************************************************************************
 * @brief 

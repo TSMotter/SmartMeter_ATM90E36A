@@ -117,7 +117,7 @@ Configuracoes:
 	  3.1) Voltage sag Th
 			. Ref: Pg 34 of App. Note
 			. Target: Vth = 80% of 127Vrms --> Vth aprox = 100Vrms
-			. RegValue = Vth * 100 * sqrt(2) / (2 * Ugain / 32768) --> ?? Quem e Ugain ??
+			. RegValue = Vth * 100 * sqrt(2) / (2 * Ugain / 32768)
 			. Default value of Ugain = 0xce40
 			. TxValue = 0x1124
 			

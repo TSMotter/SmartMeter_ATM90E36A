@@ -14,28 +14,14 @@
 #include "ring_buffer.h"
 #include "rtos_utility.h"
 #include "stm32f4xx_hal.h"
-
+#include "global_configs.h"
+#include "protocolo.h"
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
 #define RB_Size 128 	// (in bytes)
 
-#define MSG_PRINT_STARTED     (char*)"Meter Ready...\n"
-#define MSG_PRINT_THIS        (char*)"Meter -> Print: %s \n"
-#define MSG_ERRO_WARN	        (char*)"Meter -> Pino WARN: %s \n"
-#define MSG_ERRO_IRQ0	        (char*)"Meter -> Pino IRQ0: %s \n"
-#define MSG_ERRO_IRQ1	        (char*)"Meter -> Pino IRQ1: %s \n"
-#define MSG_ERRO_CRC          (char*)"Meter -> Erro CRC\n"
-#define MSG_ERRO_MALLOC       (char*)"Meter -> Erro Malloc\n"
-#define MSG_ACK               (char*)"Meter -> Ack\n"
-#define MSG_LINE_FEED         (char*)"\n"
-#define MSG_TESTE_EEPROM_OK   (char*)"Teste EEPROM OK\n"
-#define MSG_TESTE_EEPROM_ERR  (char*)"Teste EEPROM ERROR\n"
-
-// Defines usados para printar dados na UART
-// caso queria printar timestamp, aumentar para 300
-#define FULL_PRINT_VECTOR_SIZE 256
-
+/* 
 #define ATM_PHASE_A 	1
 #define ATM_PHASE_B 	2
 #define ATM_PHASE_C 	3
@@ -44,19 +30,10 @@
 #define UNIDADE_kW    "kW*"
 #define UNIDADE_kVar  "kVar*"
 #define UNIDADE_kVA   "kVA*"
-
+ */
 /***************************************************************************************************
 * Types
 ***************************************************************************************************/
-typedef struct
-{
-  uint8_t   ID;
-  uint8_t   SubID;
-  uint16_t  Comando;
-  uint16_t  DataLen;
-  uint8_t   Data[GM_Max_Command_Len];
-  uint16_t  Crc;
-} ReceiveCommand_st;
 
 typedef struct
 {
@@ -77,16 +54,13 @@ void UART_Recebe_Comando        (void);
 bool UART_Envia_Eventos         (void);
 void UART_check_queue           (void);
 void UART_check_EnergyQueue     (void);
+
+/* 
 uint8_t Convert_To_Print_Timestamp  (uint32_t dwDadoIn, char *pbyFullOutputVect);
 uint8_t Convert_To_Print_TypeA      (uint16_t wDadoIn, char *pbyFullOutputVect, char *Unidade, uint8_t byPhase);
 uint8_t Convert_To_Print_TypeB      (uint16_t wDadoIn, uint8_t Indentificador, char *pbyFullOutputVect, char *Unidade, uint8_t byPhase);
 uint8_t Convert_To_Print_TypeC      (uint16_t wDadoIn, char *pbyFullOutputVect, uint8_t byPhase);
 void    Convert_To_Print_CrLf       (char *pbyFullOutputVect);
-
-/***************************************************************************************************
-* Macros
-***************************************************************************************************/
-#define PARSER(p, s, c)      ((p) = strchr(s, c), *(p) = '\0', ++(p), (p))
 
 #define GM_CONVERT_TO_PRINT_Va(DadoIn, OutputVect) Convert_To_Print_TypeA(DadoIn, OutputVect, UNIDADE_V, ATM_PHASE_A)
 #define GM_CONVERT_TO_PRINT_Vb(DadoIn, OutputVect) Convert_To_Print_TypeA(DadoIn, OutputVect, UNIDADE_V, ATM_PHASE_B)
@@ -111,5 +85,5 @@ void    Convert_To_Print_CrLf       (char *pbyFullOutputVect);
 #define GM_CONVERT_TO_PRINT_PFa(DadoIn, OutputVect) Convert_To_Print_TypeC(DadoIn, OutputVect, ATM_PHASE_A)
 #define GM_CONVERT_TO_PRINT_PFb(DadoIn, OutputVect) Convert_To_Print_TypeC(DadoIn, OutputVect, ATM_PHASE_B)
 #define GM_CONVERT_TO_PRINT_PFc(DadoIn, OutputVect) Convert_To_Print_TypeC(DadoIn, OutputVect, ATM_PHASE_C)
-
+ */
 #endif

@@ -12,6 +12,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
@@ -32,8 +35,9 @@ static bool send_event_to_leds  (uint8_t Command, uint16_t wMillisec);
 static bool send_event_to_uart  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 static bool send_event_to_lora  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
-static bool calib_offset_reg(uint16_t reg[3]);
-static uint16_t faz_calculos_processo_calib(uint32_t valor_medio);
+static bool calib_gain_reg(uint16_t reg[3], uint8_t idx);
+static bool calib_offset_reg(uint16_t reg[3], uint8_t idx);
+static uint16_t faz_calculos_processo_calib_Uoffset(uint32_t valor_medio);
 
 static bool assina_medidas  (uint16_t id);
 static bool realiza_medidas (void);
@@ -76,6 +80,7 @@ static QueueHandle_t *Queue_ATM_HANDLE = NULL;
 static uint16_t RegisterAddress = 0;
 static uint16_t RegisterVal = 0;    
 
+static uint16_t valores_offset[6] = {0};
 static uint16_t vetor_regs_calib_offset[6][3] = { 
   {ATM_REG_UrmsA_Add, ATM_REG_UrmsALSB_Add, ATM_REG_UoffsetA_Add}, 
   {ATM_REG_UrmsB_Add, ATM_REG_UrmsBLSB_Add, ATM_REG_UoffsetB_Add}, 
@@ -83,6 +88,16 @@ static uint16_t vetor_regs_calib_offset[6][3] = {
   {ATM_REG_IrmsA_Add, ATM_REG_IrmsALSB_Add, ATM_REG_IoffsetA_Add}, 
   {ATM_REG_IrmsB_Add, ATM_REG_IrmsBLSB_Add, ATM_REG_IoffsetB_Add}, 
   {ATM_REG_IrmsC_Add, ATM_REG_IrmsCLSB_Add, ATM_REG_IoffsetC_Add}
+  };
+
+static uint16_t valores_gain[6] = {0};
+static uint16_t vetor_regs_calib_gain[6][3] = { 
+  {ATM_REG_UrmsA_Add, ATM_REG_UgainA_Add, 126}, 
+  {ATM_REG_UrmsB_Add, ATM_REG_UgainB_Add, 126}, 
+  {ATM_REG_UrmsC_Add, ATM_REG_UgainC_Add, 125},
+  {ATM_REG_IrmsA_Add, ATM_REG_IgainA_Add, 1}, 
+  {ATM_REG_IrmsB_Add, ATM_REG_IgainB_Add, 1}, 
+  {ATM_REG_IrmsC_Add, ATM_REG_IgainC_Add, 1} 
   };
 
 static aquisicao_de_medidas_st vetor_de_aquisicao[num_of_total_available_measures] = {
@@ -251,8 +266,12 @@ static void ATM_api_check_queue(void)
           	ATM.State.Current = AtmState_CalibIoffsetCReg;
           else if (NewEvent.bySubCmd == subCmd_Gain_all_phases_V)
           	ATM.State.Current = AtmState_CalibGain_all_phases_V;
-          else if (NewEvent.bySubCmd == subCmd_Gain_all_phases_I)
-          	ATM.State.Current = AtmState_CalibGain_all_phases_I;
+          else if (NewEvent.bySubCmd == subCmd_Gain_Ia)
+          	ATM.State.Current = AtmState_CalibGainIa;
+          else if (NewEvent.bySubCmd == subCmd_Gain_Ib)
+          	ATM.State.Current = AtmState_CalibGainIb;
+          else if (NewEvent.bySubCmd == subCmd_Gain_Ic)
+          	ATM.State.Current = AtmState_CalibGainIc;                        
           else if (NewEvent.bySubCmd == subCmd_Read_WriteCS3)
           	ATM.State.Current = AtmState_ReadWrite_CS3;         
         }
@@ -697,41 +716,59 @@ void ATM_machine_calib_mode(void)
     case AtmState_CalibAdjStartReg:
       if(ATM.State.Previous == AtmState_CalibAdjStartReg)
       {
-        zAssert(walk3_machine(ATM_REG_CalStart_Add, CS_REG_Value_Calibration, AtmState_Stall));
+        zAssert(walk3_machine(ATM_REG_AdjStart_Add, CS_REG_Value_Calibration, AtmState_Stall));
       }
       else if (ATM.State.Previous == AtmState_ReadWrite_CS3)
       {
-        zAssert(walk3_machine(ATM_REG_CalStart_Add, CS_REG_Value_Operation, AtmState_Suspended));
+        zAssert(walk3_machine(ATM_REG_AdjStart_Add, CS_REG_Value_Operation, AtmState_Suspended));
         ATM.Mode = SuspendedMode;
       }
     break;
     //----------------------------------------------
     case AtmState_CalibUoffsetAReg:
-      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[0]), AtmState_Stall));
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[0], 0), AtmState_Stall));
     break;
     //----------------------------------------------
     case AtmState_CalibUoffsetBReg:
-      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[1]), AtmState_Stall));
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[1], 1), AtmState_Stall));
     break;
     //----------------------------------------------
     case AtmState_CalibUoffsetCReg:
-      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[2]), AtmState_Stall));
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[2], 2), AtmState_Stall));
     break;
     //----------------------------------------------
     case AtmState_CalibIoffsetAReg:
-      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[3]), AtmState_Stall));
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[3], 3), AtmState_Stall));
     break;
     //----------------------------------------------
     case AtmState_CalibIoffsetBReg:
-      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[4]), AtmState_Stall));
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[4], 4), AtmState_Stall));
     break; 
     //----------------------------------------------
     case AtmState_CalibIoffsetCReg:
-      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[5]), AtmState_Stall));
+      zAssert(walk1_machine(calib_offset_reg(vetor_regs_calib_offset[5], 5), AtmState_Stall));
     break; 
     //----------------------------------------------
+    case AtmState_CalibGain_all_phases_V:
+      zAssert(walk1_machine(calib_gain_reg(vetor_regs_calib_gain[0], 0), 0));
+      zAssert(walk1_machine(calib_gain_reg(vetor_regs_calib_gain[1], 1), 0));
+      zAssert(walk1_machine(calib_gain_reg(vetor_regs_calib_gain[2], 2), AtmState_Stall));
+    break;
+    //----------------------------------------------
+    case AtmState_CalibGainIa:
+      zAssert(walk1_machine(calib_gain_reg(vetor_regs_calib_gain[3], 3), AtmState_Stall));
+    break;
+    //----------------------------------------------
+    case AtmState_CalibGainIb:
+      zAssert(walk1_machine(calib_gain_reg(vetor_regs_calib_gain[4], 4), AtmState_Stall));
+    break;  
+    //----------------------------------------------
+    case AtmState_CalibGainIc:
+      zAssert(walk1_machine(calib_gain_reg(vetor_regs_calib_gain[5], 5), AtmState_Stall));
+    break;          
+    //----------------------------------------------
     case AtmState_ReadWrite_CS3:
-      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS1_Add), AtmState_CalibAdjStartReg));
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS3_Add), AtmState_CalibAdjStartReg));
     break;     
     //----------------------------------------------
     default:
@@ -748,8 +785,10 @@ void ATM_machine_operation_mode(void)
   {
     //----------------------------------------------
     case AtmState_Suspended:
-      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS3_Add), 0));
-      zAssert(walk3_machine(ATM_REG_AdjStart_Add, CS_REG_Value_Operation, 0));
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS1_Add), 0));
+      zAssert(walk3_machine(ATM_REG_CalStart_Add, CS_REG_Value_Operation, 0));
+      zAssert(walk1_machine(config_reg_CS(ATM_REG_CS2_Add), 0));
+      zAssert(walk3_machine(ATM_REG_HarmStart_Add, CS_REG_Value_Operation, 0));
       
       walk1_machine(send_event_to_leds(Cmd_BlinkPattern3, subCmd_BlinkSpeed_Fast), AtmState_SubscribeMeasures);
     break;
@@ -785,10 +824,67 @@ void ATM_machine_operation_mode(void)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool calib_offset_reg(uint16_t reg[3])
+static bool calib_gain_reg(uint16_t reg[3], uint8_t idx)
+{
+  uint16_t k = 0, RxPreviousVal = 0, TxVal = 0, min = 0, max = 0, cntr = 0;
+  uint32_t valor_rms_acumulado = 0;
+
+  // Read reg rms value
+  // Realiza uma serie de leituras
+  for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
+  {
+    uint16_t RxV = 0;
+
+    vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
+    if(ATM.Drv.read_reg(reg[0], &RxV) == ATM_RC_OK)
+    {
+      cntr++;
+      if(k == 0)
+      {
+        min = RxV;
+        max = RxV;
+      }
+      else if(RxV < min)
+      {
+        min = RxV;
+      }
+      else if(RxV > max)
+      {
+        max = RxV;
+      }
+      valor_rms_acumulado += RxV;
+      continue;
+    }
+    return false;
+  }
+
+  //valor_rms_acumulado = valor_rms_acumulado - min - max;
+  uint16_t media_V = valor_rms_acumulado/(NUM_AMOSTRAS_MEDIA_CALIB);// - 2);
+
+  // Le valor atual do registrador de ganho
+  ATM.Drv.read_reg(reg[1], &RxPreviousVal);
+
+  uint32_t temp = 0;
+
+  temp = reg[2] * RxPreviousVal;
+  TxVal = (uint16_t)(temp/media_V);
+  
+  if(TxVal != RxPreviousVal)
+  {
+    valores_gain[idx] = TxVal;
+    return walk3_machine(reg[1], TxVal, 0);
+  }
+
+  return true;
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool calib_offset_reg(uint16_t reg[3], uint8_t idx)
 {
   uint16_t k = 0;
-  uint32_t valor_rms_acumulado = 0;
+  uint32_t valor_rms_acumulado = 0, min = 0, max = 0;
 
   // Realiza uma serie de leituras
   for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
@@ -796,6 +892,7 @@ static bool calib_offset_reg(uint16_t reg[3])
     uint16_t RxVal = 0;
     uint32_t valor_rms_instantaneo = 0;
 
+    vTaskDelay(ATM_RTOS_DEFAULT_DELAYS); 
     // Read reg rms value
     if(ATM.Drv.read_reg(reg[0], &RxVal) == ATM_RC_OK)
     {
@@ -805,6 +902,19 @@ static bool calib_offset_reg(uint16_t reg[3])
       if(ATM.Drv.read_reg(reg[1], &RxVal) == ATM_RC_OK)
       {
         valor_rms_instantaneo |= RxVal;
+        if(k == 0)
+        {
+          min = valor_rms_instantaneo;
+          max = valor_rms_instantaneo;
+        }
+        else if(valor_rms_instantaneo < min)
+        {
+          min = valor_rms_instantaneo;
+        }
+        else if(valor_rms_instantaneo > max)
+        {
+          max = valor_rms_instantaneo;
+        }
         valor_rms_acumulado += valor_rms_instantaneo;
         continue;
       }
@@ -813,9 +923,11 @@ static bool calib_offset_reg(uint16_t reg[3])
   }
 
   // Calcula a media
-  valor_rms_acumulado = valor_rms_acumulado/NUM_AMOSTRAS_MEDIA_CALIB;
-  uint16_t TxVal = faz_calculos_processo_calib(valor_rms_acumulado);
+  //valor_rms_acumulado = valor_rms_acumulado - min - max;
+  valor_rms_acumulado = valor_rms_acumulado/(NUM_AMOSTRAS_MEDIA_CALIB );//- 2);
+  uint16_t TxVal = faz_calculos_processo_calib_Uoffset(valor_rms_acumulado);
 
+  valores_offset[idx] = TxVal;
   // Realiza a escrita no registrador de calibracao
   if(ATM.Drv.write_reg(reg[2], TxVal) == ATM_RC_OK)
   {
@@ -828,7 +940,7 @@ static bool calib_offset_reg(uint16_t reg[3])
 /***************************************************************************************************
 * @brief Realiza o processo explicado na sessao 4.2.5 do app. note
 ***************************************************************************************************/
-static uint16_t faz_calculos_processo_calib(uint32_t valor_medio)
+static uint16_t faz_calculos_processo_calib_Uoffset(uint32_t valor_medio)
 {
   uint32_t valor_complemento2 = 0;
   uint16_t rc = 0;
@@ -906,11 +1018,6 @@ static bool realiza_medidas(void)
   #endif
 }
 
-
-
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
 
 /***************************************************************************************************
 * @brief 

@@ -49,7 +49,9 @@ enum
   subCmd_Offset_Vc,
   subCmd_Offset_Ic,
   subCmd_Gain_all_phases_V,
-  subCmd_Gain_all_phases_I,
+  subCmd_Gain_Ia,
+  subCmd_Gain_Ib,
+  subCmd_Gain_Ic,
   subCmd_Read_WriteCS3,
 };
 
@@ -148,6 +150,10 @@ typedef enum
   EvntFromUARTtoATM,
   EvntFromUARTtoPCF,
   EvntFromUARTtoLEDS,
+
+  EvntFromSXtoATM,
+  EvntFromSXtoLEDS,  
+  EvntFromSXtoUART,
 
   EvntFromLEDStoUART,
 } RTOS_Events_en;

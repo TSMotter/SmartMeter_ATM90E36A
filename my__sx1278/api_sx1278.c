@@ -35,8 +35,6 @@ bool SX_api_init(void)
 
   SX1278_drv_init(&SX1278.Drv);
 
-  SX1278.State.Current = SxState_Suspended;
-  SX1278.Mode = ListeningMode;
   SX1278.Queue = *Queue_SX_HANDLE;
 
   return true;

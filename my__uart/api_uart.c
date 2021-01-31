@@ -37,7 +37,7 @@ UART_app_st  UART = {0};
 static uint8_t                RxBufferLinear[RB_Size] = {0};
 static uint8_t                byIndiceMsg = 0;
 static bool                   bSalvandoMensagem = false;
-static ReceiveCommand_st      UARTStructure = {0};
+static receive_command_st     UARTStructure = {0};
 
 static char print_buffer_uart_queue[40] = {0}, reg_value_in_char_uart_queue[5] = {0};
 static char print_buffer_energy_queue[50] = {0};
@@ -148,54 +148,16 @@ static void Buffer_Clear(void)
 ***************************************************************************************************/
 static void Command_Parse(char *pbyBuffer)
 {
-  //Ex: <$81,01,,0005,3132333435,fed6*>
-  uint16_t RemoteCRC = 0, LocalCRC = 0, sizeTotalCmd = 0;
+  rc_prot_en rc = PROT_Parser(&UARTStructure, pbyBuffer);
 
-  uint8_t localCpy[50] = {0};
-  memcpy(localCpy, pbyBuffer, 50);
-  memset(&UARTStructure, 0, sizeof(ReceiveCommand_st));
-
-  char* str_id   		  = &pbyBuffer[1];  //++ para comecar a pegar apos o SOF
-  char* str_sub_id 	  = PARSER(str_sub_id,   str_id,       GM_Separador);
-  char* str_comando   = PARSER(str_comando,  str_sub_id,    GM_Separador);
-  char* str_data_len 	= PARSER(str_data_len, str_comando,   GM_Separador);
-  char* str_data    	= PARSER(str_data,     str_data_len, GM_Separador); 
-  char* str_crc    	  = PARSER(str_crc,      str_data,     GM_Separador); 
-
-  // - Valida CRC
-  RemoteCRC = strtoul(str_crc, NULL, 16);
-
-  sizeTotalCmd = str_crc - str_id;
-  LocalCRC = GM_CRC_CCITT(&localCpy[1], sizeTotalCmd);
-
-  if(RemoteCRC != LocalCRC)
+  if(rc == Prot_Erro_CRC)
   {
     HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ERRO_CRC, strlen(MSG_ERRO_CRC));
-    return;
   }
-
-  // - Preenche struct
-  UARTStructure.ID = strtoul(str_id, NULL, 16);
-  UARTStructure.SubID = strtoul(str_sub_id, NULL, 16);
-  UARTStructure.Comando = strtoul(str_comando, NULL, 16);
-  UARTStructure.DataLen = strtoul(str_data_len, NULL, 16);
-  
-  // When command is Cmd_WriteSpecificRegister, DataLen is used as raw data instead of actually data len
-  if(UARTStructure.DataLen && UARTStructure.SubID != Cmd_WriteSpecificRegister)
+  else if (rc == Prot_OK)
   {
-    uint8_t LocalData[GM_Max_Command_Len] = {0};
-    for(uint16_t k = 0; k < UARTStructure.DataLen; k++)
-    {
-      char aa[3] = {str_data[2*k], str_data[(2*k)+1], '\0'};
-      LocalData[k] = strtoul(aa, NULL, 16);    
-    } 
-    memcpy(UARTStructure.Data, LocalData, UARTStructure.DataLen);
+    HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ACK, strlen(MSG_ACK));
   }
-  // - Formata a resposta
-  
-  // - Envia resposta
-  HAL_UART_Transmit_IT(UART.huart, (uint8_t*)MSG_ACK, strlen(MSG_ACK));
-
 }
 
 /***************************************************************************************************
@@ -395,9 +357,7 @@ void UART_check_EnergyQueue(void)
  Data type C: X.XXX
 */
 
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
+/* 
 uint8_t Convert_To_Print_Timestamp(uint32_t dwDadoIn, char *pbyFullOutputVect)
 {
   // Local variables
@@ -425,9 +385,7 @@ uint8_t Convert_To_Print_Timestamp(uint32_t dwDadoIn, char *pbyFullOutputVect)
   return 1;
 }
 
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
+
 uint8_t Convert_To_Print_TypeA(uint16_t wDadoIn, char *pbyFullOutputVect, char *Unidade, uint8_t byPhase)
 {
   // Error condition
@@ -465,9 +423,6 @@ uint8_t Convert_To_Print_TypeA(uint16_t wDadoIn, char *pbyFullOutputVect, char *
   return 1;
 }
 
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
 uint8_t Convert_To_Print_TypeB(uint16_t wDadoIn, uint8_t Indentificador, char *pbyFullOutputVect, char *Unidade, uint8_t byPhase)
 {
   // Error condition
@@ -505,9 +460,6 @@ uint8_t Convert_To_Print_TypeB(uint16_t wDadoIn, uint8_t Indentificador, char *p
   return 1;
 }
 
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
 uint8_t Convert_To_Print_TypeC(uint16_t wDadoIn, char *pbyFullOutputVect, uint8_t byPhase)
 {
   // Error condition
@@ -545,9 +497,6 @@ uint8_t Convert_To_Print_TypeC(uint16_t wDadoIn, char *pbyFullOutputVect, uint8_
   return 1;
 }
 
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
 void Convert_To_Print_CrLf(char *pbyFullOutputVect)
 {
   // Local Variables
@@ -557,4 +506,4 @@ void Convert_To_Print_CrLf(char *pbyFullOutputVect)
   strcat(pbyFullOutputVect, CRLF);
 }
 
-
+*/

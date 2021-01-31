@@ -19,6 +19,7 @@
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
+extern SX1278_app_st LORA;
 extern osThreadId task_atm90e36aHandle;
 
 /***************************************************************************************************
@@ -44,32 +45,31 @@ void start_sx1278_task(void const * argument)
     uint8_t payload[] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39};
   #endif
 
-  uint8_t lora_rx_packet[LORA_RX_BUFFER_SIZE] = {0}, len = 0;
-  int rssi = 0;
 
   for(;;)
   {
     #if defined LORA_TEST_RX
-    LORA_Receive(0, packet, &len, &rssi);
-    #elif defined   LORA_TEST_TX
-	  LORA_Transmit(payload, sizeof(payload), 1000);
-	  vTaskDelay(RTOS_DELAY_MS(2000));
+
+      LORA_Receive(0, packet, &len, &rssi);
+
+    #elif defined LORA_TEST_TX
+
+	    LORA_Transmit(payload, sizeof(payload), 1000);
+	    vTaskDelay(RTOS_DELAY_MS(2000));
+
+    #else
+
+      LORA_Receive(0, &LORA.Pacote);
+
+      if(LORA.Pacote.len)
+      {
+        // Processa e encaminha eventos para demais tasks
+        LORA_Process_n_SendEvents(&LORA.Pacote);
+      }
+
+      LORA_api_periodic_checks();
+
     #endif
-
-    LORA_Receive(0, lora_rx_packet, &len, &rssi);
-    
-    if(len)
-    {
-      // Processa
-      LORA_Process(lora_rx_packet, len);
-
-      // Limpa
-      memset(lora_rx_packet, 0, LORA_RX_BUFFER_SIZE);
-      len = 0;
-      rssi = 0;
-    }
-
-    LORA_api_periodic_checks();
   }
 
 }

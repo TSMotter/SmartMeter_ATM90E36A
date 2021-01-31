@@ -14,7 +14,6 @@
 /***************************************************************************************************
 * Private Functions Prototypes
 ***************************************************************************************************/
-static bool character_is_escapable(uint8_t character);
 
 /***************************************************************************************************
 * @brief 
@@ -142,88 +141,6 @@ void GM_U64_TO_16ASCIIS(uint64_t hex, char *ascii)
 		i--;
 	}
 }
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-uint16_t GM_CRC_CCITT(uint8_t* buffer, uint16_t size)
-{
-  unsigned short tmp;
-  uint16_t crc = 0xffff;
-
-  for (uint16_t i=0; i < size ; i++)
-  {
-    tmp = (crc >> 8) ^ buffer[i];
-    crc = (crc << 8) ^ CRC_CCITT_TABLE[tmp];
-  }
-
-  return crc;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static bool character_is_escapable(uint8_t character)
-{
-	if (character == 0x00 || character == 0x10 || 
-			character == 0x0D || character == 0x0A ||
-			character == 0x24 || character == 0x2a || character == 0x2c)
-	{
-		return true;
-	}
-	return false;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-void aplica_escape_code(char *in, uint16_t len_in, char *out)
-{
-	uint8_t byPosicaoEscape = 0;	
-
-	for (int by = 0; by < len_in; by++)
-	{
-	  byPosicaoEscape = strlen(out);
-	  if (character_is_escapable(in[by]))
-		{
-	    out[byPosicaoEscape] = 0x10;
-	    out[byPosicaoEscape+1] = in[by] + 0x20;
-	  }
-	  else 
-		{
-	    out[byPosicaoEscape] = in[by];
-	  }
-	}
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-void retira_escape_code(char *in, uint16_t len_in)
-{
-	//For para tirar escape code do payload         
-  for(uint8_t by = 0, by2 = 0; in[by] != GM_EOF; by++, by2++)
-	{
-		//Se encontrou Escape Code
-    if(in[by] == 0x10)
-    {
-      in[by2] = in[by+1] - 0x20;
-      by++;
-    }
-    else
-		{
-      in[by2] = in[by];
-    }
-		
-		// Breaks de loop automatically after 40 cycles (for safety)
-		if(by2 >= 40)
-		{
-			break;
-		}
-  } 
-}
-
-
 
 /*
 

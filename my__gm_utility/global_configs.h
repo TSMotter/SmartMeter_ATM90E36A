@@ -1,26 +1,41 @@
 /***************************************************************************************************
-* @file   api_leds.h
-* @brief  
+* @file   global_configs.h
+* @brief  This file contains all #define configurations used all across the firmware
 * @author Giuliano Motter
-* @date   09/2020
+* @date   01/2021
 ***************************************************************************************************/
 
-#ifndef __API_LEDS_H__
-#define __API_LEDS_H__
+#ifndef __GLOBAL_CONFIGS_H__
+#define __GLOBAL_CONFIGS_H__
 
 /***************************************************************************************************
 * Includes
 ***************************************************************************************************/
-#include <stdint.h>
-#include <stdbool.h>
-#include "driver_leds.h"
-#include "rtos_utility.h"
-#include "stm32f4xx_hal.h"
-#include "ee24.h"
-#include "global_configs.h"
+
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
+// ATM90
+#define SIMULA_DADOS_ENERGIA 				0
+#define SIMULA_ASSINA_DADOS					0
+
+// LORA
+//#define LORA_TEST_TX
+//#define LORA_TEST_RX
+
+
+/* 
+ Define através de qual porta de comunicação os dados de saida de energia
+ devem ser enviados
+
+ -> Comment or uncomment to selec LORA or UART port respectivelly
+*/
+//#define USE_LORA_PORT
+
+#ifndef USE_LORA_PORT
+  #define USE_UART_PORT
+#endif
+
 
 /***************************************************************************************************
 * Types
@@ -29,9 +44,6 @@
 /***************************************************************************************************
 * Prototypes
 ***************************************************************************************************/
-bool LEDS_api_init(void);
-bool LEDS_blink_pattern1(leds_periods_en period);
-bool LEDS_blink_pattern2(leds_periods_en period);
-bool LEDS_blink_pattern3(leds_periods_en period);
-void LEDS_check_queue (void);
+
+
 #endif

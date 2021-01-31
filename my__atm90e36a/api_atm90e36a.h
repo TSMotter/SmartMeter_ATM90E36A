@@ -15,14 +15,12 @@
 #include <stdbool.h>
 #include "rtos_utility.h"
 #include "driver_atm90e36a.h"
+#include "global_configs.h"
 
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
 #define MAX_RETRIES 								10
-
-#define SIMULA_DADOS_ENERGIA 				0
-#define SIMULA_ASSINA_DADOS					1
 #define NUM_AMOSTRAS_MEDIA_CALIB		20									
 
 /***************************************************************************************************
@@ -58,7 +56,9 @@ typedef enum
 	AtmState_CalibUoffsetCReg,
 	AtmState_CalibIoffsetCReg,
 	AtmState_CalibGain_all_phases_V,
-	AtmState_CalibGain_all_phases_I,
+	AtmState_CalibGainIa,
+	AtmState_CalibGainIb,
+	AtmState_CalibGainIc,
 	AtmState_ReadWrite_CS3,	
 				 
 	// States for Operation Op. Mode:

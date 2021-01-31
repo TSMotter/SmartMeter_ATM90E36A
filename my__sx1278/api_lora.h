@@ -15,9 +15,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
 #include "rtos_utility.h"
 #include "api_sx1278.h"
-
+#include "global_configs.h"
+#include "protocolo.h"
 /***************************************************************************************************
 * Defines
 ***************************************************************************************************/
@@ -93,10 +95,6 @@
 #define BASE_RX_POINTER     0x00
 #define BASE_TX_POINTER     0x80
 
-//#define LORA_TEST_TX
-//#define LORA_TEST_RX
-
-#define LORA_RX_BUFFER_SIZE   50
 /***************************************************************************************************
 * Types
 ***************************************************************************************************/
@@ -104,12 +102,12 @@
 /***************************************************************************************************
 * Prototypes
 ***************************************************************************************************/
-bool LORA_api_init  (void);
-bool LORA_config    (uint32_t frequency);
-
-void LORA_api_periodic_checks(void);
+bool LORA_api_init              (void);
+bool LORA_config                (uint32_t frequency);
+bool LORA_Process_n_SendEvents  (sx1278_packet_st *pacote);
+void LORA_api_periodic_checks   (void);
 
 bool LORA_Transmit  (uint8_t *buffer, size_t len, uint32_t timeout);
-bool LORA_Receive   (uint8_t impl_hdr_size_to_read, uint8_t *packet, uint8_t *len_was_read, int *rssi);
-bool LORA_Process   (uint8_t *buffer, size_t len);
+bool LORA_Receive   (uint8_t impl_hdr_size_to_read, sx1278_packet_st *pacote);
+
 #endif
