@@ -140,7 +140,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of task_atm90e36a */
-  osThreadDef(task_atm90e36a, start_atm90e36a_task, osPriorityNormal, 0, 1024);
+  osThreadDef(task_atm90e36a, start_atm90e36a_task, osPriorityNormal, 0, 1536);
   task_atm90e36aHandle = osThreadCreate(osThread(task_atm90e36a), NULL);
 
   /* definition and creation of task_uart */
@@ -610,7 +610,7 @@ __weak void start_sx1278_task(void const * argument)
   /* USER CODE END start_sx1278_task */
 }
 
-/**
+ /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM1 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment

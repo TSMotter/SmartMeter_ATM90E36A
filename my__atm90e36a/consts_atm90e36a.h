@@ -425,7 +425,7 @@ typedef enum
 #define		ATM_REG_THDNIA      	  0xF5
 #define		ATM_REG_THDNIB      	  0xF6
 #define		ATM_REG_THDNIC      	  0xF7
-#define		ATM_REG_Freq        	  0xF8
+#define		ATM_REG_Freq_Add        0xF8
 #define		ATM_REG_PAngleA     	  0xF9
 #define		ATM_REG_PAngleB     	  0xFA
 #define		ATM_REG_PAngleC     	  0xFB
@@ -508,7 +508,7 @@ typedef enum
 #define ATM_REG_PowerFactor_Offset               0xBC
 #define ATM_REG_ActiveFundamentalPower_Offset    0xD0
 #define ATM_REG_ActiveHarmonicPower_Offset       0xD4
-#define ATM_REG_VoltageTHD_Offset                0xF1
-#define ATM_REG_CurrentTHD_Offset                0xF5
+#define ATM_REG_VoltageTHD_Offset                0xF0
+#define ATM_REG_CurrentTHD_Offset                0xF4
 
 #endif

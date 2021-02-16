@@ -19,6 +19,8 @@
 #define SIMULA_DADOS_ENERGIA 				0
 #define SIMULA_ASSINA_DADOS					0
 
+#define USE_SAG_REAL
+
 // LORA
 //#define LORA_TEST_TX
 //#define LORA_TEST_RX

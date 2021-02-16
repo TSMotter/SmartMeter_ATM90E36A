@@ -52,6 +52,15 @@ enum
   subCmd_Gain_Ia,
   subCmd_Gain_Ib,
   subCmd_Gain_Ic,
+  subCmd_Gain_Va_Inc,
+  subCmd_Gain_Va_Dec,
+  subCmd_Gain_Vb_Inc,
+  subCmd_Gain_Vb_Dec,
+  subCmd_Gain_Vc_Inc,
+  subCmd_Gain_Vc_Dec,
+  subCmd_Gain_Va_SubDefault,
+  subCmd_Gain_Vb_SubDefault,
+  subCmd_Gain_Vc_SubDefault,       
   subCmd_Read_WriteCS3,
 };
 
@@ -188,7 +197,7 @@ typedef struct
 #define ATM_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(20)
 #define SX_RTOS_DEFAULT_DELAYS			RTOS_DELAY_MS(50)
 #define LEDS_RTOS_DEFAULT_DELAYS    RTOS_DELAY_MS(20)
-#define UART_RTOS_DEFAULT_DELAYS    0
+#define UART_RTOS_DEFAULT_DELAYS    RTOS_DELAY_MS(20)
 
 /***************************************************************************************************
 * Prototypes

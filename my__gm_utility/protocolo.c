@@ -145,15 +145,16 @@ rc_prot_en PROT_Parser(receive_command_st *RxStruct, char incoming_buffer[GM_Max
   RxStruct->DataLen = strtoul(str_data_len, NULL, 16);
   
   // When command is Cmd_WriteSpecificRegister, DataLen is used as raw data instead of actually data len
-  if(RxStruct->DataLen && RxStruct->SubID != Cmd_WriteSpecificRegister)
+  if(RxStruct->DataLen)
   {
     uint8_t LocalData[GM_Max_Command_Len] = {0};
-    for(uint16_t k = 0; k < RxStruct->DataLen; k++)
+    uint16_t max_loops = RxStruct->DataLen > GM_Max_Command_Len ? GM_Max_Command_Len : RxStruct->DataLen;
+    for(uint16_t k = 0; k < max_loops; k++)
     {
       char aa[3] = {str_data[2*k], str_data[(2*k)+1], '\0'};
       LocalData[k] = strtoul(aa, NULL, 16);    
     } 
-    memcpy(RxStruct->Data, LocalData, RxStruct->DataLen);
+    memcpy(RxStruct->Data, LocalData, max_loops);
   }
   
   return Prot_OK;  

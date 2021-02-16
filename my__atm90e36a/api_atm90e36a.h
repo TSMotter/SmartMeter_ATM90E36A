@@ -59,6 +59,12 @@ typedef enum
 	AtmState_CalibGainIa,
 	AtmState_CalibGainIb,
 	AtmState_CalibGainIc,
+	AtmState_CalibGainVa_Inc,
+	AtmState_CalibGainVa_Dec,
+	AtmState_CalibGainVb_Inc,
+	AtmState_CalibGainVb_Dec,
+	AtmState_CalibGainVc_Inc,
+	AtmState_CalibGainVc_Dec,	
 	AtmState_ReadWrite_CS3,	
 				 
 	// States for Operation Op. Mode:

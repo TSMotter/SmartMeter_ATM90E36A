@@ -15,6 +15,7 @@
 
 #include "consts_atm90e36a.h"
 #include "gm_hal_abstraction.h"
+#include "rtos_utility.h"
 
 /***************************************************************************************************
 * Defines
@@ -33,6 +34,16 @@ typedef enum
 	ATM_RC_NONE,
 }atm_result_code_en;
 
+enum
+{
+	Va_,
+	Vb_,
+	Vc_,
+	Ia_,
+	Ib_,
+	Ic_,
+	Total_Params,	
+};
 // Presents all the pins and SPI definitions
 typedef struct
 {
@@ -61,9 +72,12 @@ typedef struct
 
 typedef struct
 {
-	// Hardware: pins and SPI
-	//atm_hw_st	hw;
+	uint16_t Gain;
+	uint16_t Offset;
+} atm_parameter_st;
 
+typedef struct
+{
 	// Hardware interaction function pointers
 	atm_result_code_en (*write_reg)(uint8_t addr, uint16_t data);
 	atm_result_code_en (*read_reg)(uint8_t addr, uint16_t *data);
@@ -73,12 +87,7 @@ typedef struct
 	bool (*monitor_irq1)(void);
 	bool (*monitor_warn)(void);
 
-	//atm_result_code_en (*get_line_V)(phase_en phase, uint32_t *data);
-	//atm_result_code_en (*get_line_I)(phase_en phase, uint32_t *data);
-	//atm_result_code_en (*get_line_P)(phase_en phase, uint32_t *data);
-	//atm_result_code_en (*get_line_Q)(phase_en phase, uint32_t *data);
-	//atm_result_code_en (*get_line_S)(phase_en phase, uint32_t *data);
-
+	atm_parameter_st Params[Total_Params];
 } atm_drv_st;
 
 
@@ -87,6 +96,7 @@ typedef struct
 ***************************************************************************************************/
 void ATM_hw_init	(void);
 void ATM_drv_init	(atm_drv_st *drv);
+void ATM_drv_default_gains(atm_drv_st *drv);
 atm_result_code_en ATM_wait_SPI_available(int delay);
 
 atm_result_code_en ATM_write_reg	(uint8_t addr, uint16_t data);

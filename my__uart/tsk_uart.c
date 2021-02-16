@@ -40,11 +40,6 @@ void start_uart_task(void const * argument)
   
   xTaskNotify(task_atm90e36aHandle, 0, eIncrement);
 
-  /* 
-    It's mandatory that there are no delays or timeouts in this loop, because 
-    HAL_UART_Receive_IT() needs to be constantly called, otherwise we get an
-    UART overrun
-  */
   for(;;)
   {
     HAL_UART_Receive_IT(UART.huart, &DummyByte, 1);

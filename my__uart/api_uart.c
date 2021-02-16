@@ -20,7 +20,7 @@ static void Insert_Byte_Buffer_Linear_Manager (uint8_t byByte);
 static void Insert_Byte_Buffer_Linear         (uint8_t byByte);
 static void Buffer_Clear                      (void);
 static void Command_Parse                     (char *pbyBuffer);
-static bool send_event_to_atm                 (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
+static bool send_event_to_atm                 (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen, uint8_t *Data);
 static bool send_event_to_leds                (RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
 /***************************************************************************************************
@@ -40,7 +40,6 @@ static bool                   bSalvandoMensagem = false;
 static receive_command_st     UARTStructure = {0};
 
 static char print_buffer_uart_queue[40] = {0}, reg_value_in_char_uart_queue[5] = {0};
-static char print_buffer_energy_queue[50] = {0};
 
 
 static SemaphoreHandle_t 	xSemaphoreEOF;
@@ -163,7 +162,7 @@ static void Command_Parse(char *pbyBuffer)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
-static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen)
+static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t SubCommand, uint16_t DataLen, uint8_t *Data)
 {
   xQueueHandle* posQueEvtHandle = RTOS_Get_Queue_Idx(QueueIDX_ATM);
 
@@ -171,7 +170,7 @@ static bool send_event_to_atm(RTOS_Events_en Target, uint8_t Command, uint8_t Su
   stEvent.enEvent   = Target;
   stEvent.byCmd     = Command;
   stEvent.bySubCmd  = SubCommand;
-  stEvent.pbyData   = 0;
+  stEvent.pbyData   = Data;
   stEvent.wDataLen  = DataLen;
 
   return RTOS_Send_Data_To_Specific_Queue(posQueEvtHandle, &stEvent, UART_RTOS_DEFAULT_DELAYS);
@@ -224,7 +223,7 @@ bool UART_Envia_Eventos(void)
 {
   if (UARTStructure.ID == 1)
   {
-    return send_event_to_atm(EvntFromUARTtoATM, UARTStructure.SubID, UARTStructure.Comando, UARTStructure.DataLen);
+    return send_event_to_atm(EvntFromUARTtoATM, UARTStructure.SubID, UARTStructure.Comando, UARTStructure.DataLen, UARTStructure.Data);
   }
   else if (UARTStructure.ID == 2)
   {
@@ -335,12 +334,24 @@ void UART_check_EnergyQueue(void)
   {
     return;
   }
-  //osDelay(10);
+  
+  char print_buffer_energy_queue[10] = {0};
+  uint16_t size = 0; 
 
-  GM_U32_TO_8ASCIIS(hex_data, print_buffer_energy_queue);
-  strcat(print_buffer_energy_queue, ",");
-  HAL_UART_Transmit(UART.huart, (uint8_t*)print_buffer_energy_queue, 9, 1000);
-  memset(print_buffer_energy_queue, 0, 50);
+  if(hex_data == 0xffffffff)
+  {
+    print_buffer_energy_queue[0] = '\r';
+    print_buffer_energy_queue[1] = '\0';
+    size = 1;
+  }
+  else
+  {
+    GM_U32_TO_8ASCIIS(hex_data, print_buffer_energy_queue);
+    strcat(print_buffer_energy_queue, ",");
+    size = 9;
+  }
+
+  HAL_UART_Transmit(UART.huart, (uint8_t*)print_buffer_energy_queue, size, 1000);
 }
 
 /*

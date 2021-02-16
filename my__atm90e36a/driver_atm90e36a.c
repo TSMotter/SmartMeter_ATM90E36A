@@ -8,6 +8,8 @@
 /***************************************************************************************************
 * Includes
 ***************************************************************************************************/
+#include <string.h>
+
 #include "consts_atm90e36a.h"
 #include "driver_atm90e36a.h"
 #include "stm32f4xx_hal.h"
@@ -91,7 +93,29 @@ void ATM_drv_init(atm_drv_st *drv)
   drv->hard_reset = ATM_hard_reset;
   drv->monitor_irq0 = ATM_IRQ0_is_set;
   drv->monitor_irq1 = ATM_IRQ1_is_set;
-  drv->monitor_warn = ATM_WarnOut_is_set;
+  drv->monitor_warn = ATM_WarnOut_is_set;  
+
+  ATM_drv_default_gains(drv);
+}
+
+/***************************************************************************************************
+* @brief Reseta valores de ganho representados no driver para o default
+***************************************************************************************************/
+void ATM_drv_default_gains(atm_drv_st *drv)
+{
+  // Load default values
+  drv->Params[Va_].Gain = 0xce40;
+  drv->Params[Va_].Offset = 0;
+  drv->Params[Vb_].Gain = 0xce40;
+  drv->Params[Vb_].Offset = 0;
+  drv->Params[Vc_].Gain = 0xce40;
+  drv->Params[Vc_].Offset = 0;
+  drv->Params[Ia_].Gain = 0x7530;
+  drv->Params[Ia_].Offset = 0;
+  drv->Params[Ib_].Gain = 0x7530;
+  drv->Params[Ib_].Offset = 0;
+  drv->Params[Ic_].Gain = 0x7530;
+  drv->Params[Ic_].Offset = 0;
 }
 
 /***************************************************************************************************
@@ -212,8 +236,9 @@ atm_result_code_en ATM_soft_reset(void)
 void ATM_hard_reset(void)
 {
   drive_gpio(&AtmHw.Reset, GPIO_PIN_RESET);
-  HAL_Delay(200);
-  drive_gpio(&AtmHw.Reset, GPIO_PIN_SET);  
+  vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
+  drive_gpio(&AtmHw.Reset, GPIO_PIN_SET);
+  vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
 }
 
 /***************************************************************************************************
@@ -240,70 +265,20 @@ bool ATM_WarnOut_is_set(void)
   return read_gpio(&AtmHw.WarnOut);
 }
 
-
-
-
-
-
-
-
-
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-atm_result_code_en ATM_get_line_V(phase_en phase, uint32_t *data)
-{
-  return 0;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-atm_result_code_en ATM_get_line_I(phase_en phase, uint32_t *data)
-{
-  return 0;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-atm_result_code_en ATM_get_line_P(phase_en phase, uint32_t *data)
-{
-  return 0;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-atm_result_code_en ATM_get_line_Q(phase_en phase, uint32_t *data)
-{
-  return 0;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-atm_result_code_en ATM_get_line_S(phase_en phase, uint32_t *data)
-{
-  return 0;
-}
-
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
 atm_result_code_en ATM_wait_SPI_available(int delay)
 {
-  uint8_t cntr = 0;
-  while (cntr < (delay/10))
+  while (delay >= 0)
   {
     if(HAL_SPI_GetState(AtmHw.SPI) == HAL_SPI_STATE_READY)
     {
       return ATM_RC_OK;
     }
 
-    cntr++;
-    HAL_Delay(10);
+    delay -= 10;
+    vTaskDelay(RTOS_DELAY_MS(10));
   }
   
   return ATM_RC_TIMEOUT;

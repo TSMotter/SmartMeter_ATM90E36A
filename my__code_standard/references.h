@@ -160,12 +160,9 @@ Configuracoes:
 			. Default
 
 		4.4) MMode0
+			. Default, so muda a freq
 			. Freq = 60Hz
-			. Filtro HPF = On
-			. Integrador di/dt = On
-			. Registradores de energia lsb == 0.01CF
-			. 3P4W
-			. Energia total (soma de todas as fases) e Porencia total == Absolute Sum
+			. TxValue = 0x1087
 
 		4.5) MMode1
 			. Digital PGA = 1x
