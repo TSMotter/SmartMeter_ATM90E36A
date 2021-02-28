@@ -144,7 +144,6 @@ rc_prot_en PROT_Parser(receive_command_st *RxStruct, char incoming_buffer[GM_Max
   RxStruct->Comando = strtoul(str_comando, NULL, 16);
   RxStruct->DataLen = strtoul(str_data_len, NULL, 16);
   
-  // When command is Cmd_WriteSpecificRegister, DataLen is used as raw data instead of actually data len
   if(RxStruct->DataLen)
   {
     uint8_t LocalData[GM_Max_Command_Len] = {0};

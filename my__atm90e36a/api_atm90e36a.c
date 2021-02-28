@@ -1119,6 +1119,7 @@ static uint16_t inc_dec_gain(uint16_t reg[3], uint8_t idx, bool inc_dec)
   }
   return false;
 }
+
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
@@ -1167,7 +1168,6 @@ static bool realiza_medidas(void)
     }
 
     #ifdef USE_UART_PORT
-      //return send_event_to_uart(Cmd_PrintThis, subCmd_print_line_feed, 0);
       return RTOS_Send_Data_To_Energy_Queue(&dado_de_finalizacao, ATM_RTOS_DEFAULT_DELAYS);
     #elif defined USE_LORA_PORT
       return send_event_to_lora(Cmd_SendEnergyData, 0, 0);
