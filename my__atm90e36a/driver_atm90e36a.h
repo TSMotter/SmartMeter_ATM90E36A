@@ -72,8 +72,12 @@ typedef struct
 
 typedef struct
 {
-	uint16_t Gain;
-	uint16_t Offset;
+	uint16_t Gain[Total_Params];
+	uint16_t Offset[Total_Params];
+	uint16_t FuncEn0;
+	uint16_t FuncEn1;
+	uint16_t MMode0;
+	uint16_t MMode1;
 } atm_parameter_st;
 
 typedef struct
@@ -87,7 +91,7 @@ typedef struct
 	bool (*monitor_irq1)(void);
 	bool (*monitor_warn)(void);
 
-	atm_parameter_st Params[Total_Params];
+	atm_parameter_st Params;
 } atm_drv_st;
 
 

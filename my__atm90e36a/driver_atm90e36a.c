@@ -104,18 +104,18 @@ void ATM_drv_init(atm_drv_st *drv)
 void ATM_drv_default_gains(atm_drv_st *drv)
 {
   // Load default values
-  drv->Params[Va_].Gain = 0xce40;
-  drv->Params[Va_].Offset = 0;
-  drv->Params[Vb_].Gain = 0xce40;
-  drv->Params[Vb_].Offset = 0;
-  drv->Params[Vc_].Gain = 0xce40;
-  drv->Params[Vc_].Offset = 0;
-  drv->Params[Ia_].Gain = 0x7530;
-  drv->Params[Ia_].Offset = 0;
-  drv->Params[Ib_].Gain = 0x7530;
-  drv->Params[Ib_].Offset = 0;
-  drv->Params[Ic_].Gain = 0x7530;
-  drv->Params[Ic_].Offset = 0;
+  drv->Params.Gain[Va_] = 0xce40;
+  drv->Params.Offset[Va_] = 0;
+  drv->Params.Gain[Vb_] = 0xce40;
+  drv->Params.Offset[Vb_] = 0;
+  drv->Params.Gain[Vc_] = 0xce40;
+  drv->Params.Offset[Vc_] = 0;
+  drv->Params.Gain[Ia_] = 0x7530;
+  drv->Params.Offset[Ia_] = 0;
+  drv->Params.Gain[Ib_] = 0x7530;
+  drv->Params.Offset[Ib_] = 0;
+  drv->Params.Gain[Ic_] = 0x7530;
+  drv->Params.Offset[Ic_] = 0;
 }
 
 /***************************************************************************************************

@@ -36,6 +36,7 @@ enum
   Cmd_WriteSpecificRegister,
   Cmd_Reset,
   Cmd_SignMeasurements,
+  Cmd_FuncEn,
 };
 
 // Sub comandos para Cmd_CalibrationMode
@@ -69,6 +70,16 @@ enum
 {
   subCmd_SoftwareReset = 1,
   subCmd_HardwareReset,  
+};
+
+// Sub comandos para Cmd_FuncEn
+enum
+{
+  subCmd_VoltageSequence = 1,
+  subCmd_VoltageSag,
+  subCmd_VoltageLoss,
+  subCmd_VoltageTHDThreshold,
+  subCmd_CurrentTHDThreshold,
 };
 
 //------------------------------------------------------------------------

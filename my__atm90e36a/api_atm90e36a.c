@@ -25,6 +25,8 @@ static void 	ATM_api_check_hw_pins			(void);
 static void   ATM_api_change_state      (atm_states_en next_state);
 
 static bool config_reg_VoltageTh(uint16_t reg, uint16_t target);
+static bool config_reg_FunEn0   (uint16_t data);
+static bool config_reg_FunEn1   (uint16_t data);
 static bool config_reg_MMode0   (void);
 static bool config_reg_MMode1   (void);
 static bool config_reg_CS       (uint16_t reg);
@@ -358,6 +360,21 @@ static void ATM_api_check_queue(void)
           assina_medidas(NewEvent.bySubCmd);
         break;
         //----------------------------------------------
+        case Cmd_FuncEn:
+        {
+          if(NewEvent.bySubCmd == subCmd_VoltageSequence)
+            config_reg_FunEn0(ATM_REG_FuncEn0_Msk_URevWnEn);
+          else if(NewEvent.bySubCmd == subCmd_VoltageSag)
+            config_reg_FunEn0(ATM_REG_FuncEn0_Msk_SagWnEn);
+          else if(NewEvent.bySubCmd == subCmd_VoltageLoss)
+            config_reg_FunEn0(ATM_REG_FuncEn0_Msk_PhaseLoseWnEn);          
+          else if(NewEvent.bySubCmd == subCmd_VoltageTHDThreshold)
+            config_reg_FunEn1(ATM_REG_FuncEn1_Msk_THDUOvEn);
+          else if(NewEvent.bySubCmd == subCmd_CurrentTHDThreshold)
+            config_reg_FunEn1(ATM_REG_FuncEn1_Msk_THDIOvEn);
+        }
+        break;
+        //----------------------------------------------
         default:
         break;    
       }
@@ -483,19 +500,65 @@ static bool config_reg_VoltageTh(uint16_t reg, uint16_t target)
 /***************************************************************************************************
 * @brief 
 ***************************************************************************************************/
+static bool config_reg_FunEn0(uint16_t data)
+{
+  uint16_t LocalReadVal = 0, write_val = 0;   
+
+  // Seta ou reseta apenas bits de interesse
+  write_val |= (ATM.Drv.Params.FuncEn0 ^ data);
+
+  if(ATM.Drv.write_reg(ATM_REG_FuncEn0_Add, write_val) == ATM_RC_OK)
+  {
+    if(ATM.Drv.read_reg(ATM_REG_FuncEn0_Add, &LocalReadVal) == ATM_RC_OK)
+    {
+      if(LocalReadVal == write_val)
+      {
+        ATM.Drv.Params.FuncEn0 = write_val;
+        return true;
+      }
+    }    
+  }
+  return false;
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool config_reg_FunEn1(uint16_t data)
+{
+  uint16_t LocalReadVal = 0, write_val = 0;   
+
+  // Seta ou reseta apenas bits de interesse
+  write_val |= (ATM.Drv.Params.FuncEn1 ^ data);
+
+  if(ATM.Drv.write_reg(ATM_REG_FuncEn1_Add, write_val) == ATM_RC_OK)
+  {
+    if(ATM.Drv.read_reg(ATM_REG_FuncEn1_Add, &LocalReadVal) == ATM_RC_OK)
+    {
+      if(LocalReadVal == write_val)
+      {
+        ATM.Drv.Params.FuncEn1 = write_val;
+        return true;
+      }
+    }    
+  }
+  return false;
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
 static bool config_reg_MMode0(void)
 {
   uint16_t LocalReadVal = 0;
   
   uint16_t data =  0;
 
-  /* 
+   
 	data |= ((ATM_REG_MMode0_Msk_Freq60Hz |  ATM_REG_MMode0_Msk_didtEn | ATM_REG_MMode0_Msk_001LSB |
             ATM_REG_MMode0_Msk_CF2varh  | ATM_REG_MMode0_Msk_ABSEnQ  | ATM_REG_MMode0_Msk_ABSEnP |
 			      ATM_REG_MMode0_Msk_EnPA     | ATM_REG_MMode0_Msk_EnPB    | ATM_REG_MMode0_Msk_EnPC));
-  */  
-
-  data = 0x1087;
+    
   if(ATM.Drv.write_reg(ATM_REG_MMode0_Add, data) == ATM_RC_OK)
   {
     if(ATM.Drv.read_reg(ATM_REG_MMode0_Add, &LocalReadVal) == ATM_RC_OK)
@@ -517,15 +580,17 @@ static bool config_reg_MMode1(void)
 {
   uint16_t LocalReadVal = 0;
   
-  uint16_t data = ( (ATM_REG_MMode1_Pos_DPGA_GAIN << ATM_REG_MMode1_Val_Gain1) | 
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_V3 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_V2 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_V2 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_V1 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_I4 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_I3 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_I2 << ATM_REG_MMode1_Val_1x)  |
-                    (ATM_REG_MMode1_Pos_PGA_GAIN_I1 << ATM_REG_MMode1_Val_1x));
+  uint16_t data = 0;
+  
+  data |= ((ATM_REG_MMode1_Val_Gain1 << ATM_REG_MMode1_Pos_DPGA_GAIN) | 
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_V3)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_V2)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_V2)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_V1)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_I4)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_I3)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_I2)  |
+           (ATM_REG_MMode1_Val_1x << ATM_REG_MMode1_Pos_PGA_GAIN_I1));
   
 
   if(ATM.Drv.write_reg(ATM_REG_MMode1_Add, data) == ATM_RC_OK)
@@ -753,8 +818,7 @@ void ATM_machine_config_mode(void)
       zAssert(walk1(config_reg_MMode0(), 0));
 
       // 4.5) MMode1
-      // Default...
-      //zAssert(walk1(config_reg_MMode1(), 0));
+      zAssert(walk1(config_reg_MMode1(), 0));
 
       // 4.6) P Start Th
       zAssert(walk3(ATM_REG_PStartTh_Add, 0x1D4C, 0));
@@ -954,7 +1018,7 @@ static bool calib_gain_reg(uint16_t reg[3], uint8_t idx)
   {
     if(walk3(reg[1], gains_previous[idx], 0))
     {
-      ATM.Drv.Params[idx].Gain = gains_previous[idx];
+      ATM.Drv.Params.Gain[idx] = gains_previous[idx];
       return true;
     }    
   }
@@ -1003,7 +1067,7 @@ static bool calib_gain_reg(uint16_t reg[3], uint8_t idx)
   {
     if(walk3(reg[1], TxVal, 0))
     {
-      ATM.Drv.Params[idx].Gain = TxVal;
+      ATM.Drv.Params.Gain[idx] = TxVal;
       return true;
     }
     return false;
@@ -1064,7 +1128,7 @@ static bool calib_offset_reg(uint16_t reg[3], uint8_t idx)
   // Realiza a escrita no registrador de calibracao
   if(walk3(reg[2], TxVal, 0))
   {
-    ATM.Drv.Params[idx].Offset = TxVal;
+    ATM.Drv.Params.Offset[idx] = TxVal;
     return true; // Sucesso !
   }
 
@@ -1104,17 +1168,17 @@ static uint16_t inc_dec_gain(uint16_t reg[3], uint8_t idx, bool inc_dec)
   // Inc
   if(inc_dec)
   {
-    TxVal = ATM.Drv.Params[idx].Gain + 1;
+    TxVal = ATM.Drv.Params.Gain[idx] + 1;
   }
   // Dec
   else
   {
-    TxVal = ATM.Drv.Params[idx].Gain - 1;
+    TxVal = ATM.Drv.Params.Gain[idx] - 1;
   }
   
   if(ATM.Drv.write_reg(reg[1], TxVal) == ATM_RC_OK)
   {
-    ATM.Drv.Params[idx].Gain = TxVal;
+    ATM.Drv.Params.Gain[idx] = TxVal;
     return true;
   }
   return false;
