@@ -457,6 +457,8 @@ static bool config_reg_VoltageTh(uint16_t reg, uint16_t target)
 
   #ifdef USE_SAG_REAL
   uint16_t biggest_gain = 0, temp1 = 0, temp2 = 0;
+  float numerador = 0, denominador = 0;
+
 
   // Se eu ja tenho os valores, nao preciso ler os registradores
   if((gains_previous[Va_]) && (gains_previous[Vb_]) && (gains_previous[Vc_]))
@@ -474,7 +476,12 @@ static bool config_reg_VoltageTh(uint16_t reg, uint16_t target)
   
   biggest_gain = temp1 > biggest_gain ? temp1 : biggest_gain;
   biggest_gain = temp2 > biggest_gain ? temp2 : biggest_gain;
-  TxVal = (target * 100 * sqrt(2))/(2 * biggest_gain/32768);
+
+  numerador = target * 100 * sqrt(2);
+  denominador = ((float)biggest_gain/(float)32768);
+  denominador = denominador * 2;
+
+  TxVal = abs((numerador/denominador));
 
   #else
 
