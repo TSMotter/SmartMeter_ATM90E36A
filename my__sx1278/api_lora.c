@@ -45,7 +45,6 @@ extern QueueHandle_t      *Queue_ENERGY_HANDLE;
 ***************************************************************************************************/
 SX1278_app_st LORA = {0};
 static QueueHandle_t *Queue_LORA_HANDLE = NULL;
-static char lora_buffer_energy_queue[50] = {0};
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -250,6 +249,7 @@ static bool lora_send_energy_data(void)
 {
   uint32_t hex_data = 0, cntr = 0;
   char temp[5] = {0};
+  char lora_buffer_energy_queue[50] = {0};
 
   // Retira todos os itens da fila de energia
   while (xQueueReceive(*Queue_ENERGY_HANDLE, &hex_data, 0) == pdPASS)
@@ -258,15 +258,11 @@ static bool lora_send_energy_data(void)
     GM_U32_TO_8ASCIIS(hex_data, temp);
     strcat(lora_buffer_energy_queue, temp);
     strcat(lora_buffer_energy_queue, ",");
-    continue;
   }
   
   // Termina de montar a msg de envio (ID, sequence number)
 
   // Envia dados via Lora
-
-  // Limpa buffer  
-  memset(lora_buffer_energy_queue, 0, 50);
 
   return true;
 }

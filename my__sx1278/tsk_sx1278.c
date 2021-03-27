@@ -55,7 +55,8 @@ void start_sx1278_task(void const * argument)
     #elif defined LORA_TEST_TX
 
 	    LORA_Transmit(payload, sizeof(payload), 1000);
-	    vTaskDelay(RTOS_DELAY_MS(2000));
+      payload[0] = payload[0] == 0x40 ? 0x30 : payload[0]+1;
+	    vTaskDelay(RTOS_DELAY_MS(20000));
 
     #else
 
