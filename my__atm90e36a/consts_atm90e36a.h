@@ -435,68 +435,6 @@ typedef enum
 #define		ATM_REG_UangleC     	  0xFF
 
 
-
-
-
-// Registrador ATM_REG_ADD_SysStatus1
-/*
- typedef struct
- {
- bool bINOv1;	// Valor de corrente amostrado na linha de neutro é
- //   maior que o threshold configurado em INWarnTh1
- bool bINOv0;	// Valor de corrente calculado na linha de neutro é
- //   maior que o threshold configurado em INWarnTh0
- bool bTHDUOv;	// Indica se um ou mais valores de THD de tensão são
- //   maiores que o threshold configurado em THDNUTh
- bool bTHDIOv;	// Indica se um ou mais valores de THD de corrente são
- //   maiores que o threshold configurado em THDNUTh
- bool bDFTDone;	// Indica se os dados da Transformada de Fourrier estão prontos
-
- // Indicam se existe alguma mudança de direcao de energia
- //   ativa/reativa total ou de alguma fase individual, seja
- //   forward-reverse ou reverse-forward
- //   0: nao ha mudança de direcao
- //   1: ha mudança de direcao
-
- bool bRevQchgT;
- bool bRevQchgA;
- bool bRevQchgB;
- bool bRevQchgC;
-
- bool bRevPchgT;
- bool bRevPchgA;
- bool bRevPchgB;
- bool bRevPchgC;
- }
- type_stATM_REG_SysStatus1;
- */
-
-
-#define ATM_REG_MASK_ZXConfig       0xFFFF
-#define ATM_REG_MASK_SagTh          0xFFFF
-#define ATM_REG_MASK_PhaseLossTh    0xFFFF
-#define ATM_REG_MASK_INWarnTh0      0xFFFF
-#define ATM_REG_MASK_INWarnTh1      0xFFFF
-#define ATM_REG_MASK_THDNUTh        0xFFFF
-#define ATM_REG_MASK_THDNITh        0xFFFF
-#define ATM_REG_MASK_DMACtrl        0xFFFF
-#define ATM_REG_MASK_LastSPIData    0xFFFF
-#define ATM_REG_MASK_SysStatus0     0x55CC
-#define ATM_REG_MASK_SysStatus0_CSx 0x5500
-#define ATM_REG_MASK_FuncEn0        0x04CC
-#define ATM_REG_MASK_FuncEn1        0xCEFF
-#define ATM_REG_MASK_SysStatus1     0xCEFF
-#define ATM_REG_MASK_PMAvgSamples   0xFFFF
-
-/* 
-* 8kHz sample rate
-* 1 amostra a cada 125us
-* 160 amostras duram 20ms
-* 60Hz - 16,6ms - 133 amostras a 8khz
-* */
-#define ATM_REG_MASK_PMIrmsLSB 0x0FFF
-
-
 // Defines para trabalhar com leitura de tensao e corrente RMS
 #define ATM_REG_LineVoltageRms_Offset            0xD8
 #define ATM_REG_LineVoltageRmsLsb_Offset         0xE8
@@ -508,7 +446,7 @@ typedef enum
 #define ATM_REG_PowerFactor_Offset               0xBC
 #define ATM_REG_ActiveFundamentalPower_Offset    0xD0
 #define ATM_REG_ActiveHarmonicPower_Offset       0xD4
-#define ATM_REG_VoltageTHD_Offset                0xF0
-#define ATM_REG_CurrentTHD_Offset                0xF4
-
+#define ATM_REG_VoltageTHDN_Offset               0xF0
+#define ATM_REG_CurrentTHDN_Offset               0xF4
+#define ATM_REG_HarmRatio_Current_Offset         0x100
 #endif

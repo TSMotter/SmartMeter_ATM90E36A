@@ -106,8 +106,8 @@ enum
 	aparent_power_a,
 	active_fundamental_power_a,
 	active_harmonic_power_a,
-	voltage_thd_a,
-	current_thd_a,
+	voltage_thdn_a,
+	current_thdn_a,
 
 	voltage_rms_b,
 	current_rms_b,
@@ -116,8 +116,8 @@ enum
 	aparent_power_b,
 	active_fundamental_power_b,
 	active_harmonic_power_b,
-	voltage_thd_b,
-	current_thd_b,
+	voltage_thdn_b,
+	current_thdn_b,
 
 	voltage_rms_c,
 	current_rms_c,
@@ -126,8 +126,8 @@ enum
 	aparent_power_c,
 	active_fundamental_power_c,
 	active_harmonic_power_c,
-	voltage_thd_c,
-	current_thd_c,
+	voltage_thdn_c,
+	current_thdn_c,
 
 	frequency,
 
