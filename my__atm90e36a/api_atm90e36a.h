@@ -108,6 +108,16 @@ enum
 	active_harmonic_power_a,
 	voltage_thdn_a,
 	current_thdn_a,
+	voltage_2_order_harmonic_ratio_a,
+	voltage_3_order_harmonic_ratio_a,
+	voltage_4_order_harmonic_ratio_a,
+	voltage_5_order_harmonic_ratio_a,
+	voltage_thd_a, // phase A, Voltage, Total Harmonic Distortion Ratio
+	current_2_order_harmonic_ratio_a,
+	current_3_order_harmonic_ratio_a,
+	current_4_order_harmonic_ratio_a,
+	current_5_order_harmonic_ratio_a,	
+	current_thd_a, // phase A, Current, Total Harmonic Distortion Ratio
 
 	voltage_rms_b,
 	current_rms_b,
@@ -131,7 +141,7 @@ enum
 
 	frequency,
 
-	num_of_total_available_measures,
+	numero_total_medidas,
 };
 
 typedef struct

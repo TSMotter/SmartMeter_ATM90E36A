@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include "measurements_atm90e36a.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -24,12 +25,12 @@ static void 	ATM_api_check_retry				(void);
 static void 	ATM_api_check_hw_pins			(void);
 static void   ATM_api_change_state      (atm_states_en next_state);
 
-static bool config_reg_VoltageTh(uint16_t reg, uint16_t target);
-static bool config_reg_FunEn0   (uint16_t data);
-static bool config_reg_FunEn1   (uint16_t data);
-static bool config_reg_MMode0   (void);
-static bool config_reg_MMode1   (void);
-static bool config_reg_CS       (uint16_t reg);
+static bool config_reg_VoltageTh  (uint16_t reg, uint16_t target);
+static bool config_reg_FunEn0     (uint16_t data);
+static bool config_reg_FunEn1     (uint16_t data);
+static bool config_reg_MMode0     (void);
+static bool config_reg_MMode1     (void);
+static bool config_reg_CS         (uint16_t reg);
 
 static bool walk1 (bool method, atm_states_en next_state);
 static bool walk2 (atm_result_code_en method, atm_states_en next_state);
@@ -39,42 +40,11 @@ static bool send_event_to_leds  (uint8_t Command, uint16_t wMillisec);
 static bool send_event_to_uart  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 static bool send_event_to_lora  (uint8_t Command, uint8_t SubCommand, uint16_t DataLen);
 
-static bool calib_gain_reg  (uint16_t reg[3], uint8_t idx);
-static bool calib_offset_reg(uint16_t reg[3], uint8_t idx);
-static uint16_t inc_dec_gain(uint16_t reg[3], uint8_t idx, bool inc_dec);
+static bool calib_gain_reg    (uint16_t reg[3], uint8_t idx);
+static bool calib_offset_reg  (uint16_t reg[3], uint8_t idx);
+static uint16_t inc_dec_gain  (uint16_t reg[3], uint8_t idx, bool inc_dec);
 static uint16_t faz_calculos_processo_calib_Uoffset(uint32_t valor_medio);
 
-static bool assina_medidas  (uint16_t id);
-static bool realiza_medidas (void);
-
-static bool Acquire_Va      (uint16_t *read_val); 	
-static bool Acquire_Vb      (uint16_t *read_val); 	
-static bool Acquire_Vc      (uint16_t *read_val); 	
-static bool Acquire_Ia      (uint16_t *read_val); 	
-static bool Acquire_Ib      (uint16_t *read_val); 	
-static bool Acquire_Ic      (uint16_t *read_val); 	
-static bool Acquire_Pa      (uint16_t *read_val); 	
-static bool Acquire_Pb      (uint16_t *read_val); 	
-static bool Acquire_Pc      (uint16_t *read_val); 	
-static bool Acquire_Qa      (uint16_t *read_val); 	
-static bool Acquire_Qb      (uint16_t *read_val); 	
-static bool Acquire_Qc      (uint16_t *read_val); 	
-static bool Acquire_Sa      (uint16_t *read_val); 	
-static bool Acquire_Sb      (uint16_t *read_val); 	
-static bool Acquire_Sc      (uint16_t *read_val);  	 
-static bool Acquire_Pa_fund (uint16_t *read_val);
-static bool Acquire_Pb_fund (uint16_t *read_val);
-static bool Acquire_Pc_fund (uint16_t *read_val);
-static bool Acquire_Pa_harm (uint16_t *read_val);
-static bool Acquire_Pb_harm (uint16_t *read_val);
-static bool Acquire_Pc_harm (uint16_t *read_val);
-static bool Acquire_Va_thdn  (uint16_t *read_val);
-static bool Acquire_Vb_thdn  (uint16_t *read_val);
-static bool Acquire_Vc_thdn  (uint16_t *read_val);
-static bool Acquire_Ia_thdn  (uint16_t *read_val);
-static bool Acquire_Ib_thdn  (uint16_t *read_val);
-static bool Acquire_Ic_thdn  (uint16_t *read_val);
-static bool Acquire_Freq    (uint16_t *read_val);
 /***************************************************************************************************
 * Externals
 ***************************************************************************************************/
@@ -109,45 +79,6 @@ static uint16_t vetor_regs_calib_gain[6][3] = {
   {ATM_REG_IrmsB_Add, ATM_REG_IgainB_Add, 920}, 
   {ATM_REG_IrmsC_Add, ATM_REG_IgainC_Add, 910} 
   };
-
-
-static aquisicao_de_medidas_st vetor_de_aquisicao[num_of_total_available_measures] = {
-  // Phase A:
-  {.active = false, .read_func = Acquire_Va},
-  {.active = false, .read_func = Acquire_Ia},
-  {.active = false, .read_func = Acquire_Pa},
-  {.active = false, .read_func = Acquire_Qa},
-  {.active = false, .read_func = Acquire_Sa},
-  {.active = false, .read_func = Acquire_Pa_fund},
-  {.active = false, .read_func = Acquire_Pa_harm},
-  {.active = false, .read_func = Acquire_Va_thdn},
-  {.active = false, .read_func = Acquire_Ia_thdn},
-
-  // Phase B:
-  {.active = false, .read_func = Acquire_Vb},
-  {.active = false, .read_func = Acquire_Ib},
-  {.active = false, .read_func = Acquire_Pb},
-  {.active = false, .read_func = Acquire_Qb},
-  {.active = false, .read_func = Acquire_Sb},
-  {.active = false, .read_func = Acquire_Pb_fund},
-  {.active = false, .read_func = Acquire_Pb_harm},
-  {.active = false, .read_func = Acquire_Vb_thdn},
-  {.active = false, .read_func = Acquire_Ib_thdn},
-
-  // Phase C:
-  {.active = false, .read_func = Acquire_Vc},
-  {.active = false, .read_func = Acquire_Ic},
-  {.active = false, .read_func = Acquire_Pc},
-  {.active = false, .read_func = Acquire_Qc},
-  {.active = false, .read_func = Acquire_Sc},
-  {.active = false, .read_func = Acquire_Pc_fund},
-  {.active = false, .read_func = Acquire_Pc_harm},
-  {.active = false, .read_func = Acquire_Vc_thdn},
-  {.active = false, .read_func = Acquire_Ic_thdn},    
-
-  // Others
-  {.active = false, .read_func = Acquire_Freq},
-};
 
 /***************************************************************************************************
 * @brief 
@@ -631,6 +562,185 @@ static bool config_reg_CS(uint16_t reg)
   return false;  
 }
 
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool calib_gain_reg(uint16_t reg[3], uint8_t idx)
+{
+  uint16_t k = 0, RxPreviousVal = 0, TxVal = 0, min = 0, max = 0, cntr = 0;
+  uint32_t valor_rms_acumulado = 0;
+
+  // Se eu ja tenho valor previo de calibracao, so escrevo ele e vou embora
+  if(gains_previous[idx] != 0)
+  {
+    if(walk3(reg[1], gains_previous[idx], 0))
+    {
+      ATM.Drv.Params.Gain[idx] = gains_previous[idx];
+      return true;
+    }    
+  }
+
+  // Read reg rms value
+  // Realiza uma serie de leituras
+  for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
+  {
+    uint16_t RxV = 0;
+
+    vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
+    if(ATM.Drv.read_reg(reg[0], &RxV) == ATM_RC_OK)
+    {
+      cntr++;
+      if(k == 0)
+      {
+        min = RxV;
+        max = RxV;
+      }
+      else if(RxV < min)
+      {
+        min = RxV;
+      }
+      else if(RxV > max)
+      {
+        max = RxV;
+      }
+      valor_rms_acumulado += RxV;
+      continue;
+    }
+    return false;
+  }
+
+  //valor_rms_acumulado = valor_rms_acumulado - min - max;
+  uint16_t media_V = valor_rms_acumulado/(NUM_AMOSTRAS_MEDIA_CALIB);// - 2);
+
+  // Le valor atual do registrador de ganho
+  ATM.Drv.read_reg(reg[1], &RxPreviousVal);
+
+  uint32_t temp = 0;
+
+  temp = reg[2] * RxPreviousVal;
+  TxVal = (uint16_t)(temp/media_V);
+  
+  if(TxVal != RxPreviousVal)
+  {
+    if(walk3(reg[1], TxVal, 0))
+    {
+      ATM.Drv.Params.Gain[idx] = TxVal;
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static bool calib_offset_reg(uint16_t reg[3], uint8_t idx)
+{
+  uint16_t k = 0;
+  uint32_t valor_rms_acumulado = 0, min = 0, max = 0;
+
+  // Realiza uma serie de leituras
+  for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
+  {
+    uint16_t RxVal = 0;
+    uint32_t valor_rms_instantaneo = 0;
+
+    vTaskDelay(ATM_RTOS_DEFAULT_DELAYS); 
+    // Read reg rms value
+    if(ATM.Drv.read_reg(reg[0], &RxVal) == ATM_RC_OK)
+    {
+      valor_rms_instantaneo = (uint32_t)(RxVal << 16) & 0xffff0000;
+
+      // Read reg rms LSB value
+      if(ATM.Drv.read_reg(reg[1], &RxVal) == ATM_RC_OK)
+      {
+        valor_rms_instantaneo |= RxVal;
+        if(k == 0)
+        {
+          min = valor_rms_instantaneo;
+          max = valor_rms_instantaneo;
+        }
+        else if(valor_rms_instantaneo < min)
+        {
+          min = valor_rms_instantaneo;
+        }
+        else if(valor_rms_instantaneo > max)
+        {
+          max = valor_rms_instantaneo;
+        }
+        valor_rms_acumulado += valor_rms_instantaneo;
+        continue;
+      }
+    }
+    return false;
+  }
+
+  // Calcula a media
+  //valor_rms_acumulado = valor_rms_acumulado - min - max;
+  valor_rms_acumulado = valor_rms_acumulado/(NUM_AMOSTRAS_MEDIA_CALIB );//- 2);
+  uint16_t TxVal = faz_calculos_processo_calib_Uoffset(valor_rms_acumulado);
+
+  // Realiza a escrita no registrador de calibracao
+  if(walk3(reg[2], TxVal, 0))
+  {
+    ATM.Drv.Params.Offset[idx] = TxVal;
+    return true; // Sucesso !
+  }
+
+  return false;
+}
+
+/***************************************************************************************************
+* @brief Realiza o processo explicado na sessao 4.2.5 do app. note
+***************************************************************************************************/
+static uint16_t faz_calculos_processo_calib_Uoffset(uint32_t valor_medio)
+{
+  uint32_t valor_complemento2 = 0;
+  uint16_t rc = 0;
+
+  // Descarta 7 bits LSB
+  valor_medio = (valor_medio >> 7);
+
+  // Mascara para garantir que 7 bits MSB são realmente zero
+  valor_medio &= 0x01FFFFFF;
+
+  // Realiza o complemento de 2
+  valor_complemento2 = (~valor_medio) + 1;
+
+  // Retorna 16 bits LSB
+  rc = valor_complemento2;
+
+  return rc;
+}
+
+/***************************************************************************************************
+* @brief 
+***************************************************************************************************/
+static uint16_t inc_dec_gain(uint16_t reg[3], uint8_t idx, bool inc_dec)
+{
+  uint16_t TxVal = 0;
+
+  // Inc
+  if(inc_dec)
+  {
+    TxVal = ATM.Drv.Params.Gain[idx] + 1;
+  }
+  // Dec
+  else
+  {
+    TxVal = ATM.Drv.Params.Gain[idx] - 1;
+  }
+  
+  if(ATM.Drv.write_reg(reg[1], TxVal) == ATM_RC_OK)
+  {
+    ATM.Drv.Params.Gain[idx] = TxVal;
+    return true;
+  }
+  return false;
+}
+
 
 
 
@@ -1012,486 +1122,5 @@ void ATM_machine_operation_mode(void)
   }  
 }
 
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static bool calib_gain_reg(uint16_t reg[3], uint8_t idx)
-{
-  uint16_t k = 0, RxPreviousVal = 0, TxVal = 0, min = 0, max = 0, cntr = 0;
-  uint32_t valor_rms_acumulado = 0;
-
-  // Se eu ja tenho valor previo de calibracao, so escrevo ele e vou embora
-  if(gains_previous[idx] != 0)
-  {
-    if(walk3(reg[1], gains_previous[idx], 0))
-    {
-      ATM.Drv.Params.Gain[idx] = gains_previous[idx];
-      return true;
-    }    
-  }
-
-  // Read reg rms value
-  // Realiza uma serie de leituras
-  for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
-  {
-    uint16_t RxV = 0;
-
-    vTaskDelay(ATM_RTOS_DEFAULT_DELAYS);
-    if(ATM.Drv.read_reg(reg[0], &RxV) == ATM_RC_OK)
-    {
-      cntr++;
-      if(k == 0)
-      {
-        min = RxV;
-        max = RxV;
-      }
-      else if(RxV < min)
-      {
-        min = RxV;
-      }
-      else if(RxV > max)
-      {
-        max = RxV;
-      }
-      valor_rms_acumulado += RxV;
-      continue;
-    }
-    return false;
-  }
-
-  //valor_rms_acumulado = valor_rms_acumulado - min - max;
-  uint16_t media_V = valor_rms_acumulado/(NUM_AMOSTRAS_MEDIA_CALIB);// - 2);
-
-  // Le valor atual do registrador de ganho
-  ATM.Drv.read_reg(reg[1], &RxPreviousVal);
-
-  uint32_t temp = 0;
-
-  temp = reg[2] * RxPreviousVal;
-  TxVal = (uint16_t)(temp/media_V);
-  
-  if(TxVal != RxPreviousVal)
-  {
-    if(walk3(reg[1], TxVal, 0))
-    {
-      ATM.Drv.Params.Gain[idx] = TxVal;
-      return true;
-    }
-    return false;
-  }
-
-  return true;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static bool calib_offset_reg(uint16_t reg[3], uint8_t idx)
-{
-  uint16_t k = 0;
-  uint32_t valor_rms_acumulado = 0, min = 0, max = 0;
-
-  // Realiza uma serie de leituras
-  for(k = 0; k < NUM_AMOSTRAS_MEDIA_CALIB; k++)
-  {
-    uint16_t RxVal = 0;
-    uint32_t valor_rms_instantaneo = 0;
-
-    vTaskDelay(ATM_RTOS_DEFAULT_DELAYS); 
-    // Read reg rms value
-    if(ATM.Drv.read_reg(reg[0], &RxVal) == ATM_RC_OK)
-    {
-      valor_rms_instantaneo = (uint32_t)(RxVal << 16) & 0xffff0000;
-
-      // Read reg rms LSB value
-      if(ATM.Drv.read_reg(reg[1], &RxVal) == ATM_RC_OK)
-      {
-        valor_rms_instantaneo |= RxVal;
-        if(k == 0)
-        {
-          min = valor_rms_instantaneo;
-          max = valor_rms_instantaneo;
-        }
-        else if(valor_rms_instantaneo < min)
-        {
-          min = valor_rms_instantaneo;
-        }
-        else if(valor_rms_instantaneo > max)
-        {
-          max = valor_rms_instantaneo;
-        }
-        valor_rms_acumulado += valor_rms_instantaneo;
-        continue;
-      }
-    }
-    return false;
-  }
-
-  // Calcula a media
-  //valor_rms_acumulado = valor_rms_acumulado - min - max;
-  valor_rms_acumulado = valor_rms_acumulado/(NUM_AMOSTRAS_MEDIA_CALIB );//- 2);
-  uint16_t TxVal = faz_calculos_processo_calib_Uoffset(valor_rms_acumulado);
-
-  // Realiza a escrita no registrador de calibracao
-  if(walk3(reg[2], TxVal, 0))
-  {
-    ATM.Drv.Params.Offset[idx] = TxVal;
-    return true; // Sucesso !
-  }
-
-  return false;
-}
-
-/***************************************************************************************************
-* @brief Realiza o processo explicado na sessao 4.2.5 do app. note
-***************************************************************************************************/
-static uint16_t faz_calculos_processo_calib_Uoffset(uint32_t valor_medio)
-{
-  uint32_t valor_complemento2 = 0;
-  uint16_t rc = 0;
-
-  // Descarta 7 bits LSB
-  valor_medio = (valor_medio >> 7);
-
-  // Mascara para garantir que 7 bits MSB são realmente zero
-  valor_medio &= 0x01FFFFFF;
-
-  // Realiza o complemento de 2
-  valor_complemento2 = (~valor_medio) + 1;
-
-  // Retorna 16 bits LSB
-  rc = valor_complemento2;
-
-  return rc;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static uint16_t inc_dec_gain(uint16_t reg[3], uint8_t idx, bool inc_dec)
-{
-  uint16_t TxVal = 0;
-
-  // Inc
-  if(inc_dec)
-  {
-    TxVal = ATM.Drv.Params.Gain[idx] + 1;
-  }
-  // Dec
-  else
-  {
-    TxVal = ATM.Drv.Params.Gain[idx] - 1;
-  }
-  
-  if(ATM.Drv.write_reg(reg[1], TxVal) == ATM_RC_OK)
-  {
-    ATM.Drv.Params.Gain[idx] = TxVal;
-    return true;
-  }
-  return false;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static bool assina_medidas(uint16_t id)
-{
-  #if SIMULA_ASSINA_DADOS == 0
-
-    vetor_de_aquisicao[id].active = !vetor_de_aquisicao[id].active;
-
-  #elif SIMULA_ASSINA_DADOS == 1
-  
-    vetor_de_aquisicao[voltage_rms_a].active = true;
-    vetor_de_aquisicao[current_rms_a].active = true;
-    vetor_de_aquisicao[voltage_rms_b].active = true;
-    vetor_de_aquisicao[voltage_rms_c].active = true;  
-  
-  #endif
-
-  return true;
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static bool realiza_medidas(void)
-{
-
-  #if SIMULA_DADOS_ENERGIA == 0
-
-    uint32_t dado_de_envio = 0, dado_de_finalizacao = 0xffffffff;
-    uint16_t temp_read_val = 0, rc = 0;
-    
-    // Varre vetor e realiza leituras, 
-    for(uint16_t indice = 0; indice < num_of_total_available_measures; indice++)
-    {
-      if(vetor_de_aquisicao[indice].active)
-      {
-        vetor_de_aquisicao[indice].read_func(&temp_read_val);
-
-        dado_de_envio = (uint32_t) (indice << 16);
-        dado_de_envio |= (uint32_t)(temp_read_val);
-
-        // Envia evento para task UART
-        rc += RTOS_Send_Data_To_Energy_Queue(&dado_de_envio, ATM_RTOS_DEFAULT_DELAYS);
-      }
-    }
-
-    #ifdef USE_UART_PORT
-      return RTOS_Send_Data_To_Energy_Queue(&dado_de_finalizacao, ATM_RTOS_DEFAULT_DELAYS);
-    #elif defined USE_LORA_PORT
-      return send_event_to_lora(Cmd_SendEnergyData, 0, 0);
-    #endif
-
-  #elif SIMULA_DADOS_ENERGIA == 1
-
-  #endif
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_line_voltage(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_LineVoltageRms_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }  
-  return false;
-}
-
-static bool Acquire_Va(uint16_t *read_val)
-{
-  return atm_acquire_line_voltage(PHASE_A, read_val);
-}
-static bool Acquire_Vb(uint16_t *read_val)
-{
-  return atm_acquire_line_voltage(PHASE_B, read_val);
-}
-static bool Acquire_Vc(uint16_t *read_val)
-{
-  return atm_acquire_line_voltage(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_line_current(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_LineCurrentRms_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Ia(uint16_t *read_val)
-{
-  return atm_acquire_line_current(PHASE_A, read_val);
-}
-static bool Acquire_Ib(uint16_t *read_val)
-{
-  return atm_acquire_line_current(PHASE_B, read_val);
-}
-static bool Acquire_Ic(uint16_t *read_val)
-{
-  return atm_acquire_line_current(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_active_power(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_ActivePower_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Pa(uint16_t *read_val)
-{
-  return atm_acquire_active_power(PHASE_A, read_val);
-}
-static bool Acquire_Pb(uint16_t *read_val)
-{
-  return atm_acquire_active_power(PHASE_B, read_val);
-}
-static bool Acquire_Pc(uint16_t *read_val)
-{
-  return atm_acquire_active_power(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_reactive_power(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_ReactivePower_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Qa(uint16_t *read_val)
-{
-  return atm_acquire_reactive_power(PHASE_A, read_val);
-}
-static bool Acquire_Qb(uint16_t *read_val)
-{
-  return atm_acquire_reactive_power(PHASE_B, read_val);
-}
-static bool Acquire_Qc(uint16_t *read_val)
-{
-  return atm_acquire_reactive_power(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_aparent_power(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_AparantPower_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Sa(uint16_t *read_val)
-{
-  return atm_acquire_aparent_power(PHASE_A, read_val);
-}
-static bool Acquire_Sb(uint16_t *read_val)
-{
-  return atm_acquire_aparent_power(PHASE_B, read_val);
-}
-static bool Acquire_Sc(uint16_t *read_val)
-{
-  return atm_acquire_aparent_power(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_power_factor(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_PowerFactor_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_active_fundamental_power(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_ActiveFundamentalPower_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Pa_fund(uint16_t *read_val)
-{
-  return atm_acquire_active_fundamental_power(PHASE_A, read_val);
-}
-static bool Acquire_Pb_fund(uint16_t *read_val)
-{
-  return atm_acquire_active_fundamental_power(PHASE_B, read_val);
-}
-static bool Acquire_Pc_fund(uint16_t *read_val)
-{
-  return atm_acquire_active_fundamental_power(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_active_harmonic_power(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_ActiveHarmonicPower_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Pa_harm(uint16_t *read_val)
-{
-  return atm_acquire_active_harmonic_power(PHASE_A, read_val);
-}
-static bool Acquire_Pb_harm(uint16_t *read_val)
-{
-  return atm_acquire_active_harmonic_power(PHASE_B, read_val);
-}
-static bool Acquire_Pc_harm(uint16_t *read_val)
-{
-  return atm_acquire_active_harmonic_power(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_voltage_thdn(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_VoltageTHDN_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Va_thdn(uint16_t *read_val)
-{
-  return atm_acquire_voltage_thdn(PHASE_A, read_val);
-}
-static bool Acquire_Vb_thdn(uint16_t *read_val)
-{
-  return atm_acquire_voltage_thdn(PHASE_B, read_val);
-}
-static bool Acquire_Vc_thdn(uint16_t *read_val)
-{
-  return atm_acquire_voltage_thdn(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-bool atm_acquire_current_thdn(phase_en phase, uint16_t *val)
-{
-  if(ATM.Drv.read_reg((ATM_REG_CurrentTHDN_Offset + phase), val) == ATM_RC_OK)
-  {
-    return true;
-  }
-  return false;  
-}
-
-static bool Acquire_Ia_thdn(uint16_t *read_val)
-{
-  return atm_acquire_current_thdn(PHASE_A, read_val);
-}
-static bool Acquire_Ib_thdn(uint16_t *read_val)
-{
-  return atm_acquire_current_thdn(PHASE_B, read_val);
-}
-static bool Acquire_Ic_thdn(uint16_t *read_val)
-{
-  return atm_acquire_current_thdn(PHASE_C, read_val);
-}
-
-/***************************************************************************************************
-* @brief 
-***************************************************************************************************/
-static bool Acquire_Freq(uint16_t *read_val)
-{
-  return ATM.Drv.read_reg(ATM_REG_Freq_Add, read_val);
-}
 
 #pragma GCC diagnostic pop

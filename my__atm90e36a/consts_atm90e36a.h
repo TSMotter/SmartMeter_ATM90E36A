@@ -448,5 +448,14 @@ typedef enum
 #define ATM_REG_ActiveHarmonicPower_Offset       0xD4
 #define ATM_REG_VoltageTHDN_Offset               0xF0
 #define ATM_REG_CurrentTHDN_Offset               0xF4
-#define ATM_REG_HarmRatio_Current_Offset         0x100
+#define ATM_REG_2_Order_HarmRatio_Current_Offset 0x100
+#define ATM_REG_3_Order_HarmRatio_Current_Offset 0x101
+#define ATM_REG_4_Order_HarmRatio_Current_Offset 0x102
+#define ATM_REG_5_Order_HarmRatio_Current_Offset 0x103
+#define ATM_REG_Total_HarmRatio_Current_Offset   0x11F
+#define ATM_REG_2_Order_HarmRatio_Voltage_Offset 0x160
+#define ATM_REG_3_Order_HarmRatio_Voltage_Offset 0x161
+#define ATM_REG_4_Order_HarmRatio_Voltage_Offset 0x162
+#define ATM_REG_5_Order_HarmRatio_Voltage_Offset 0x163
+#define ATM_REG_Total_HarmRatio_Voltage_Offset   0x17F
 #endif
