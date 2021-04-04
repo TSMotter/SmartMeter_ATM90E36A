@@ -1,6 +1,7 @@
 # Ignorar diretorios
 **/Debug
 **/.vscode
+**/.settings
 
 # Ignorar arquivos de projeto
 *.mk
